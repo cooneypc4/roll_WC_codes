@@ -176,9 +176,9 @@ def plot_multiseg_2s_sepaxes(n_t,rEms,pulse_vals,contra_weights,offsetcontra,con
                 la = '$Right r_E$'
             #do subplots for each segment and side
             plt.subplot(len(lseginds)*2,1,seginds[seg])
-            plt.plot(rEms[0:n_t,datinds[seg],s], co, label=la)
-            if any(rEms[0:n_t,datinds[seg],s]>cthresh):
-                xset = np.where(rEms[0:n_t,datinds[seg],s]>cthresh)[0]
+            plt.plot(rEms[n_t,datinds[seg],s], co, label=la)
+            if any(rEms[n_t,datinds[seg],s]>cthresh):
+                xset = np.where(rEms[n_t,datinds[seg],s]>cthresh)[0]
                 xends = xset[np.where(np.diff(xset)>1)]
                 xends = np.append(xends,xset[-1])
                 a = np.where(np.diff(xset)>1)[0] + 1
@@ -200,24 +200,18 @@ def plot_multiseg_2s_sepaxes(n_t,rEms,pulse_vals,contra_weights,offsetcontra,con
                 plt.ylabel('L & R rE', fontsize=12)
             if seg == seginds[-1] and s == 1:
                 plt.xlabel('seconds', fontsize=10)
-                xints = np.arange(0,n_t+20,20)
+                xints = np.arange(n_t[-1]+20,20)
                 plt.xticks(xints)
                 ax = plt.gca()
                 ax.set_xticklabels(str(xi*pars['dt']) for xi in xints) 
             
     I_mag = pulse_vals[0,0]
     I_dur = pulse_vals[0,1]
-    inhib_mag = inhib_pulse[0]
-    inhib_dur = inhib_pulse[1]
     inc = -0.1
     contra_names = ['LR-EE','LR-EI','LR-IE','LR-II'] 
 
     allstrs = [('L mag: ' + str(I_mag)), ('L dur: ' + str(I_dur*pars['dt'])), ('R mag: ' + str(round((I_mag*offsetcontra),2))),
                ('R dur: ' + str(I_dur*contra_dur*pars['dt']))]
-    if inhib_side == 0:
-        allstrs.extend(['L-I mag: ' + str(round(inhib_mag*offsetcontra,2)),'L-I dur: ' + str(inhib_dur*pars['dt'])])
-    else:
-        allstrs.extend(['R-I mag: ' + str(round(inhib_mag*offsetcontra,2)),'R-I dur: ' + str(inhib_dur*pars['dt'])])
     #for loop looping list - textstr, plot, add inc
     for l in allstrs:
         plt.gcf().text(0.92, 0.92+inc, l, fontsize = 6)
@@ -230,11 +224,11 @@ def plot_multiseg_2s_sepaxes(n_t,rEms,pulse_vals,contra_weights,offsetcontra,con
     #plt.tight_layout()
     plt.show()
     #fig.savefig((ti + str(n_t) + '_2side_multiseg_traces.svg'), format = 'svg', dpi = 1200)
-    fig.savefig((ti + str(n_t) + '_2side_multiseg_traces.png'), format = 'png', dpi = 1200)
+    fig.savefig((ti + str(n_t[0]) + str(n_t[-1]) + '_2side_multiseg_traces.png'), format = 'png', dpi = 1200)
 
 
 
-def plot_multiseg_sameaxes(n_t,rEms,pulse_vals,contra_weights,offsetcontra,contra_dur,inhib_pulse,inhib_side,perturb_init,perturb_input,titype):
+def plot_multiseg_sameaxes(n_t,rEms,pulse_vals,contra_weights,offsetcontra,contra_dur,perturb_init,perturb_input,titype):
     #look at LR waves in diff vertical subplots, diff colors
     cthresh = 0.3
     #perturb_input = [1, 1, 0, 7, 1.7, rest_dur+1, 50] #yesno, E or I, ipsi contra, seg, mag, time of onset, duration of input
@@ -255,12 +249,12 @@ def plot_multiseg_sameaxes(n_t,rEms,pulse_vals,contra_weights,offsetcontra,contr
                 la = 'Right rE'
             #do subplots for each segment and side
             plt.subplot(len(seginds),1,seg+1)
-            plt.plot(rEms[0:n_t,seg,s], co, label=la)
+            plt.plot(rEms[n_t,seg,s], co, label=la)
             ax = plt.gca()
             ax.set_xticks([])
             ax.set_yticks([])
-            if any(rEms[0:n_t,seginds[seg],s]>cthresh):
-                xset = np.where(rEms[0:n_t,seginds[seg],s]>cthresh)[0]
+            if any(rEms[n_t,seginds[seg],s]>cthresh):
+                xset = np.where(rEms[n_t,seginds[seg],s]>cthresh)[0]
                 xends = xset[np.where(np.diff(xset)>1)]
                 xends = np.append(xends,xset[-1])
                 a = np.where(np.diff(xset)>1)[0] + 1
@@ -272,15 +266,15 @@ def plot_multiseg_sameaxes(n_t,rEms,pulse_vals,contra_weights,offsetcontra,contr
                     plt.axvline(xends[p],ystarts[p],heights[p],color = 'k')
             if perturb_input[0] == 1 and seg == perturb_input[3] and s == perturb_input[2]: 
                 plt.axvline(x=perturb_input[5],ymin=0,ymax=1,color='r')
-                if perturb_input[6] > n_t:
-                    plt.axvline(x=n_t,ymin=0,ymax=1,color='r')
+                if perturb_input[6] > n_t[-1]:
+                    plt.axvline(x=n_t[-1],ymin=0,ymax=1,color='r')
                 else:
                     plt.axvline(x=perturb_input[5]+perturb_input[6],ymin=0,ymax=1,color='r')
             if seg+1 == len(seginds)/2 and s == 0:
                 plt.ylabel('L & R rE', fontsize=12)
             if seg == seginds[-1] and s == 0:
                 plt.xlabel('seconds', fontsize=10)
-                xints = np.arange(0,n_t+20,40)
+                xints = np.arange(0,n_t[-1]+20,40)
                 plt.xticks(xints)
                 ax = plt.gca()
                 ax.set_xticklabels(str(int(xi*pars['dt'])) for xi in xints) 
@@ -288,17 +282,11 @@ def plot_multiseg_sameaxes(n_t,rEms,pulse_vals,contra_weights,offsetcontra,contr
             
     I_mag = pulse_vals[0,0]
     I_dur = pulse_vals[0,1]
-    inhib_mag = inhib_pulse[0]
-    inhib_dur = inhib_pulse[1]
     inc = -0.05
     contra_names = ['EE','EI','IE','II'] 
 
     allstrs = [('L mag: ' + str(I_mag)), ('L dur: ' + str(I_dur*pars['dt'])), ('R mag: ' + str(round((I_mag*offsetcontra),2))),
                ('R dur: ' + str(I_dur*contra_dur*pars['dt'])), 'perturb_init:' + str(perturb_init), 'perturb_input:' + str(perturb_input)]
-    if inhib_side == 0:
-        allstrs.extend(['L-I mag: ' + str(round(inhib_mag*offsetcontra,2)),'L-I dur: ' + str(inhib_dur*pars['dt'])])
-    else:
-        allstrs.extend(['R-I mag: ' + str(round(inhib_mag*offsetcontra,2)),'R-I dur: ' + str(inhib_dur*pars['dt'])])
     #for loop looping list - textstr, plot, add inc
     for l in allstrs:
         plt.gcf().text(0.92, 0.92+inc, l, fontsize = 6)
@@ -310,8 +298,8 @@ def plot_multiseg_sameaxes(n_t,rEms,pulse_vals,contra_weights,offsetcontra,contr
     
     #plt.tight_layout()
     plt.show()
-    fig.savefig((titype + str(n_t) + '_multiseg_traces_singleaxesperseg.svg'), format = 'svg', dpi = 1200)
-    fig.savefig((titype + str(n_t) + '_multiseg_traces_singleaxesperseg.png'), format = 'png', dpi = 1200)
+    fig.savefig((titype + str(n_t[0]) + str(n_t[-1]) + '_multiseg_traces_singleaxesperseg.svg'), format = 'svg', dpi = 1200)
+    fig.savefig((titype + str(n_t[0]) + str(n_t[-1]) + '_multiseg_traces_singleaxesperseg.png'), format = 'png', dpi = 1200)
 
 
 #plot contract_dur, isi, and lr diff, per seg, per wave --
@@ -432,17 +420,11 @@ def plot_motor_out(segx_in,cdur_in,isi_in,side_diff,numwaves_in,I_pulse_in,ti):
             
     I_mag = pulse_vals[0,0]
     I_dur = pulse_vals[0,1]
-    inhib_mag = inhib_pulse[0]
-    inhib_dur = inhib_pulse[1]
     inc = -0.025
     contra_names = ['LR-EE','LR-EI','LR-IE','LR-II'] 
 
     allstrs = [('L mag: ' + str(I_mag)), ('L dur: ' + str(I_dur*pars['dt'])), ('R mag: ' + str(round((I_mag*offsetcontra),2))),
                ('R dur: ' + str(I_dur*contra_dur*pars['dt'])), 'perturb_init:' + str(perturb_init), 'perturb_input:' + str(perturb_input)]
-    if inhib_side == 0:
-        allstrs.extend(['L-I mag: ' + str(round(inhib_mag*offsetcontra,2)),'L-I dur: ' + str(inhib_dur*pars['dt'])])
-    else:
-        allstrs.extend(['R-I mag: ' + str(round(inhib_mag*offsetcontra,2)),'R-I dur: ' + str(inhib_dur*pars['dt'])])
     #for loop looping list - textstr, plot, add inc
     for l in allstrs:
         plt.gcf().text(0.985, 0.98+inc, l, fontsize = 6)
@@ -490,17 +472,13 @@ def plot_phase_diff(numwaves_in, avg, ant, mid, post, I_pulse_in, ti):
        
     I_mag = pulse_vals[0,0]
     I_dur = pulse_vals[0,1]
-    inhib_mag = inhib_pulse[0]
-    inhib_dur = inhib_pulse[1]
+
     inc = -0.025
     contra_names = ['EE','EI','IE','II'] 
     
     allstrs = [('L mag: ' + str(I_mag)), ('L dur: ' + str(I_dur*pars['dt'])), ('R mag: ' + str(round((I_mag*offsetcontra),2))),
                ('R dur: ' + str(I_dur*contra_dur*pars['dt'])), 'perturb_init:' + str(perturb_init), 'perturb_input:' + str(perturb_input)]
-    if inhib_side == 0:
-        allstrs.extend(['L-I mag: ' + str(round(inhib_mag*offsetcontra,2)),'L-I dur: ' + str(inhib_dur*pars['dt'])])
-    else:
-        allstrs.extend(['R-I mag: ' + str(round(inhib_mag*offsetcontra,2)),'R-I dur: ' + str(inhib_dur*pars['dt'])])
+
     #for loop looping list - textstr, plot, add inc
     for l in allstrs:
         plt.gcf().text(0.985, 0.98+inc, l, fontsize = 6)
@@ -514,8 +492,143 @@ def plot_phase_diff(numwaves_in, avg, ant, mid, post, I_pulse_in, ti):
     plt.show()
     fig.savefig((ti+'_phase_diff.svg'), format = 'svg', dpi = 1200)
     fig.savefig((ti+'_phase_diff.png'), format = 'png', dpi = 1200)
+    
 
+#single ISI plot for all waves and all segs - left panel = contract spikes for whole time, all segs; right panel = delta spikes all waves
+def jitter_contract_raw(n_t,rEms,I_pulse_in,ti):
+    #plot just like multiseg traces, but single vert lines at cthresh start
+    cthresh = 0.3
+    #perturb_input = [1, 1, 0, 7, 1.7, rest_dur+1, 50] #yesno, E or I, ipsi contra, seg, mag, time of onset, duration of input
+    fig = plt.figure(figsize=(7,5))
+    
+    if rEms.shape[1] > 20:
+        seginds = np.linspace(0,rEms.shape[1],8,dtype=int)
+    else:
+        seginds = np.arange(0,rEms.shape[1])
+        
+    for seg in seginds:
+        for s in np.arange(rEms.shape[2]):
+            if s == 0:
+                co = 'b'
+                la = 'Left rE'
+            else:
+                co = 'm'
+                la = 'Right rE'
+            #do subplots for each segment and side
+            plt.subplot(len(seginds),1,seg+1)
+            ax = plt.gca()
+            ax.set_xticks([])
+            ax.set_yticks([])
+            
+            if any(rEms[n_t,seginds[seg],s]>cthresh):
+                xset = np.where(rEms[n_t,seginds[seg],s]>cthresh)[0]
+                xends = xset[np.where(np.diff(xset)>1)]
+                xends = np.append(xends,xset[-1])
+                a = np.where(np.diff(xset)>1)[0] + 1
+                xstarts = np.append(xset[0],xset[a])
+                ystarts = np.zeros(len(xstarts))
+                heights = np.repeat(1,len(xstarts))
+                for p in np.arange(0,len(xstarts)):
+                    plt.axvline(xstarts[p],ystarts[p],heights[p],color = co,label = la)
+            if perturb_input[0] == 1 and seg == perturb_input[3] and s == perturb_input[2]: 
+                if perturb_input[1] == 0:
+                    colpert = 'r'
+                else:
+                    colpert = 'b'
+                plt.axvline(x=perturb_input[5],ymin=0,ymax=1,color=colpert)
+                if perturb_input[6] > n_t[-1]:
+                    plt.axvline(x=n_t[-1],ymin=0,ymax=1,color=colpert)
+                else:
+                    plt.axvline(x=perturb_input[5]+perturb_input[6],ymin=0,ymax=1,color=colpert)
+            if seg+1 == len(seginds)/2 and s == 0:
+                plt.ylabel('L & R rE', fontsize=12)
+            if seg == seginds[-1] and s == 0:
+                plt.xlabel('seconds', fontsize=10)
+                xints = np.arange(0,n_t[-1]+20,40)
+                plt.xticks(xints)
+                ax = plt.gca()
+                ax.set_xticklabels(str(int(xi*pars['dt'])) for xi in xints) 
+    plt.legend(loc='lower right')
+        
+    I_mag = pulse_vals[0,0]
+    I_dur = pulse_vals[0,1]
+    inc = -0.025
+    contra_names = ['LR-EE','LR-EI','LR-IE','LR-II'] 
 
+    allstrs = [('L mag: ' + str(I_mag)), ('L dur: ' + str(I_dur*pars['dt'])), ('R mag: ' + str(round((I_mag*offsetcontra),2))),
+               ('R dur: ' + str(I_dur*contra_dur*pars['dt'])), 'perturb_init:' + str(perturb_init), 'perturb_input:' + str(perturb_input)]
+    #for loop looping list - textstr, plot, add inc
+    for l in allstrs:
+        plt.gcf().text(0.985, 0.98+inc, l, fontsize = 6)
+        inc = inc-0.025
+    for iw,w in enumerate(contra_weights):
+        inc = inc-0.025
+        textstr = contra_names[iw] + '=' + str(w)
+        plt.gcf().text(0.985, 0.98+inc, textstr, fontsize = 6)
+    
+    fig.tight_layout()
+    plt.show()
+    fig.savefig((ti+'_jitter_raw.svg'), format = 'svg', dpi = 1200)
+    fig.savefig((ti+'_jitter_raw.png'), format = 'png', dpi = 1200)
+        
+def jitter_contract_delta(segx_in,rEms,isi_in,numwaves_in,I_pulse_in,ti):
+    #plot just like the LR phase difs but here delta isi's
+    fig = plt.figure(figsize=(7,5))
+    if numwaves_in > 30:
+        selwa = np.linspace(0,numwaves_in-2,30,dtype=int)
+    else:
+        selwa = np.arange(0,numwaves_in-2)    
+    
+    #A1
+    plt.scatter(selwa,isi_in[0,selwa],c ="m")
+    plt.plot(selwa,isi_in[0,selwa],c ="m",label="A2-A1")
+    #A3
+    plt.scatter(selwa,isi_in[2,selwa],c ="b")
+    plt.plot(selwa,isi_in[2,selwa],c ="b",label="A4-A3")
+    #A8/9
+    plt.scatter(selwa,isi_in[6,selwa],c ="g")
+    plt.plot(selwa,isi_in[6,selwa],c ="g",label="A8/9-A7")
+    #Avg
+    plt.scatter(selwa,np.mean(isi_in[:,selwa],0),c ="k")
+    plt.plot(selwa,np.mean(isi_in[:,selwa],0),c ="k",label="Average")
+    #line for comparison at 0
+    plt.axhline(0, color='r', ls='--')
+
+    ylimtop = np.max(isi_in)
+    ylimbott = np.min(isi_in)
+    if ylimtop > 1 or ylimbott < -1:
+        plt.ylim([-ylimtop*2,ylimtop*2])
+    else:
+        plt.ylim([-1,1])
+    plt.ylabel(r"$\Delta$")
+    plt.xlabel('Activity Waves')
+    ax = plt.gca()
+    wavect = [str(si+1) for si in selwa]
+    ax.set_xticks(selwa)
+    ax.set_xticklabels(wavect)
+    plt.legend(loc='lower left')
+            
+    I_mag = pulse_vals[0,0]
+    I_dur = pulse_vals[0,1]
+    inc = -0.025
+    contra_names = ['LR-EE','LR-EI','LR-IE','LR-II'] 
+
+    allstrs = [('L mag: ' + str(I_mag)), ('L dur: ' + str(I_dur*pars['dt'])), ('R mag: ' + str(round((I_mag*offsetcontra),2))),
+               ('R dur: ' + str(I_dur*contra_dur*pars['dt'])), 'perturb_init:' + str(perturb_init), 'perturb_input:' + str(perturb_input)]
+    #for loop looping list - textstr, plot, add inc
+    for l in allstrs:
+        plt.gcf().text(0.985, 0.98+inc, l, fontsize = 6)
+        inc = inc-0.025
+    for iw,w in enumerate(contra_weights):
+        inc = inc-0.025
+        textstr = contra_names[iw] + '=' + str(w)
+        plt.gcf().text(0.985, 0.98+inc, textstr, fontsize = 6)
+    
+    fig.tight_layout()
+    plt.show()
+    fig.savefig((ti+'_jitter_delta.svg'), format = 'svg', dpi = 1200)
+    fig.savefig((ti+'_jitter_delta.png'), format = 'png', dpi = 1200)
+    
 #%% functions for setting up the model - param setting, nonlinearity (FI curve) - sigmoid, derivative of activation function
 #setup the default parameters to match Gjorgjieva et al., 2013
 def default_pars(**kwargs):
@@ -546,7 +659,7 @@ def default_pars(**kwargs):
   #pars['I_ext_I'] = 0.
 
   # simulation parameters
-  pars['T'] = 80.        # Total duration of simulation [ms]
+  pars['T'] = 100.        # Total duration of simulation [ms]
   pars['dt'] = .1        # Simulation time step [ms]
   pars['rE_init'] = 0.017  # Initial value of E - unclear if should keep this - tutorial used 0.2 for E and I; paper does not mention initialization
   pars['rI_init'] = 0.011 # Initial value of I
@@ -851,9 +964,6 @@ def calc_vecfield(weights):
 
 #idea: for checking potential for fp - run test of subtracting all vals iteratively from null clines and see if any difference is >0
 
-#1/10 - PM
-#STOPPED HERE- want to try different weighting schemes and inputs of single seg 
-#and see how it impacts the vectorfield?
 #%% calculate and plot vector fields for different weights of each type
 # wE_grid = np.arange(1,21,1)
 # wI_grid = -wE_grid
@@ -931,7 +1041,7 @@ def simulate_wc_multiseg(tau_E, b_E, theta_E, tau_I, b_I, theta_I,
                     wEEself, wEIself, wIEself, wIIself, wEEadj, wEIadj,
                     rE_init, rI_init, dt, range_t, kmax_E, kmax_I, n_segs, rest_dur, 
                     n_sides, sim_input, pulse_vals, contra_weights, offsetcontra, contra_dur, 
-                    offsetcontra_sub, contra_dur_sub, inhib_pulse, inhib_side, perturb_init, 
+                    offsetcontra_sub, contra_dur_sub, perturb_init, 
                     perturb_input, **otherpars):
     """
     Simulate the Wilson-Cowan equations
@@ -962,9 +1072,9 @@ def simulate_wc_multiseg(tau_E, b_E, theta_E, tau_I, b_I, theta_I,
 
     if perturb_init[0] == 1:
         if perturb_init[1] == 1: #excitatory ipsi or contra
-            rEms[rest_dur,perturb_init[3],perturb_init[2]] = perturb_init[4]
+            rEms[perturb_init[5]:perturb_init[5]+perturb_init[6],perturb_init[2]] = perturb_init[4]
         else:
-            rIms[rest_dur,perturb_init[3],perturb_init[2]] = perturb_init[4]
+            rIms[perturb_init[5]:perturb_init[5]+perturb_init[6],perturb_init[3],perturb_init[2]] = perturb_init[4]
     
     #setup external input mat
     if sim_input == 0:
@@ -988,17 +1098,12 @@ def simulate_wc_multiseg(tau_E, b_E, theta_E, tau_I, b_I, theta_I,
             I_ext_E[:,:,0] = np.repeat(np.reshape(np.where(sine_ipsi>0, sine_ipsi*pulse_vals[0,0], 0),[Lt,1]),8,axis=1)
             if n_sides>1:
                 I_ext_E[:,:,1] = np.repeat(np.reshape(np.where(sine_contra>0, sine_contra*pulse_vals[0,0], 0),[Lt,1],8,axis=1))
-                                          
-    if inhib_pulse[0] != 0: 
-        I_ext_I[:,:,inhib_side] = np.repeat(np.reshape(np.concatenate((np.zeros(rest_dur), (inhib_pulse[0] * np.ones(int(inhib_pulse[1]))), 
-                                                                                  np.zeros(Lt - rest_dur - int(inhib_pulse[1])))),[Lt,1]),8,axis=1)
-    
     
     #perturb_input = [1, sign, 0, sloop, inputl, rest_dur+1, pulse-rest_dur] #yesno, I E or both, ipsi contra or both, seg, mag, time of onset, duration of input
     
     if perturb_input[0] == 1:
         start = int(perturb_input[5])
-        end = int(perturb_input[6])
+        end = start + int(perturb_input[6])
         if perturb_input[1] == 1: #excitatory ipsi or contra
             if perturb_input[2] != 2:
                 if 'all' in perturb_input:
@@ -1010,7 +1115,7 @@ def simulate_wc_multiseg(tau_E, b_E, theta_E, tau_I, b_I, theta_I,
                                                                                                                                 np.zeros(Lt-int(perturb_input[5]+perturb_input[6]))))
                 I_ext_E[:,perturb_input[3],1] = np.concatenate((np.zeros(perturb_input[5]), perturb_input[4] * np.ones(perturb_input[6]), 
                                                                                                                                 np.zeros(Lt-int(perturb_input[5]+perturb_input[6]))))
-        else:
+        else: #inhib
             I_ext_I[:,perturb_input[3],perturb_input[2]] = np.concatenate((np.zeros(perturb_input[5]), perturb_input[4] * np.ones(perturb_input[6]), 
                                                                                                                             np.zeros(Lt-int(perturb_input[5]+perturb_input[6]))))
         
@@ -1050,8 +1155,14 @@ def simulate_wc_multiseg(tau_E, b_E, theta_E, tau_I, b_I, theta_I,
                                                                    + (wEIadj * rIms[k,seg-1,s]) + (wEIself * rIms[k,seg,s]) + (wEIadj * rIms[k,seg+1,s]) 
                                                                    + (wEEcontra * rEms[k,seg,cs]) + (wEIcontra * rIms[k,seg,cs]) + I_ext_E[k,seg,s]), b_E, theta_E))
                 # Update using Euler's method
-                rEms[k+1,seg,s] = float(rEms[k,seg,s] + drEms[k,seg,s])
-                rIms[k+1,seg,s] = float(rIms[k,seg,s] + drIms[k,seg,s])
+                if rEms[k+1,seg,s] == 0:
+                    rEms[k+1,seg,s] = float(rEms[k,seg,s] + drEms[k,seg,s])
+                else:
+                    rEms[k+1,seg,s] = rEms[k+1,seg,s]
+                if rIms[k+1,seg,s] == 0:
+                    rIms[k+1,seg,s] = float(rIms[k,seg,s] + drIms[k,seg,s])
+                else:
+                    rIms[k+1,seg,s] = rIms[k+1,seg,s]
         
     return rEms, rIms, I_ext_E, I_ext_I
 
@@ -1134,7 +1245,7 @@ def find_nearest(array, value):
     return array[idx]
 
 #%% calculate side diffs and motor output for 2-sided models
-def motor_output_check(E,pulse_vals,c_thresh,titype):
+def motor_output_check(n_t,E,pulse_vals,c_thresh,titype):
     #find contraction onset and dur by checking drE vals
     segx = np.arange(E.shape[1])
     side = np.arange(E.shape[2])
@@ -1177,20 +1288,11 @@ def motor_output_check(E,pulse_vals,c_thresh,titype):
                 num_waves = right_ws.shape[0]
                 nwends = right_we.shape[0]
                 
-                print(right_ws)
-                print(right_we)
-                print(num_waves)
-                print(nwends)
-                print(totalwaves)
-                
                 if num_waves > totalwaves:
                     totalwaves = num_waves
                 if num_waves > nwends:
                     wdiff = totalwaves - num_waves
                     if wdiff > 0:
-                        print(right_ws.shape)
-                        print(wdiff)
-                        print(right_starts.shape)
                         right_ws = np.concatenate((np.reshape(right_ws,[right_ws.shape[0],-1]),np.zeros([right_starts.shape[0],wdiff])),1)
                     elif wdiff < 0:
                         right_starts = np.concatenate(((right_starts,np.zeros([right_starts.shape[0],wdiff]))),1)
@@ -1218,25 +1320,40 @@ def motor_output_check(E,pulse_vals,c_thresh,titype):
             isi = np.ones([cstart.shape[0]-1,cstart.shape[1]])*99999
             cdur = np.ones(cstart.shape)*99999
             cnorm = np.ones(cstart.shape[1])*99999
+            for seg in segx:
+                for wa in np.arange(cstart.shape[1]):
+                    if seg != 0:
+                        comparray_ant = cstart[seg-1,:]
+                        adjval = find_nearest(comparray_ant, cstart[seg,wa])
+                        isi[seg-1,wa] = cstart[seg,wa] - adjval
+                        if isi[seg-1,wa] > 5:
+                            isi[seg-1,wa] = np.nan
+                        cdur[seg-1,wa] = abs(cend[seg,wa] - cstart[seg,wa])
+                    elif seg == 0:
+                        comparray_end = cstart[-1,:]
+                        adjval = find_nearest(comparray_end, cstart[0,wa])
+                        cnorm[wa] = adjval - cstart[0,wa]
+                        cdur[seg-1,wa] = abs(cend[seg,wa] - cstart[seg,wa])
         else:
             isi = np.ones([cstart.shape[0]-1,cstart.shape[1],2])*99999
             cdur = np.ones([cstart.shape[0],cstart.shape[1],2])*99999
             cnorm = np.ones([cstart.shape[1],2])*99999
-        for si in side: #figure out how to do this w/ 2D array and 3D array in same loop
-            for seg in segx:
-                for wa in np.arange(cstart.shape[1]):
-                    if seg != 0:
-                        comparray_ant = cstart[seg-1,:,si]
-                        adjval = find_nearest(comparray_ant, cstart[seg,wa,si])
-                        isi[seg-1,wa,si] = cstart[seg,wa,si] - adjval
-                        if isi[seg-1,wa,si] > 5:
-                            isi[seg-1,wa,si] = np.nan
-                        cdur[seg-1,wa,si] = abs(cend[seg,wa,si] - cstart[seg,wa,si])
-                    elif seg == 0:
-                        comparray_end = cstart[-1,:,si]
-                        adjval = find_nearest(comparray_end, cstart[0,wa,si])
-                        cnorm[wa,si] = adjval - cstart[0,wa,si]
-                        cdur[seg-1,wa,si] = abs(cend[seg,wa,si] - cstart[seg,wa,si])
+            for si in side:
+                for seg in segx:
+                    for wa in np.arange(cstart.shape[1]):
+                        if seg != 0:
+                            comparray_ant = cstart[seg-1,:,si]
+                            adjval = find_nearest(comparray_ant, cstart[seg,wa,si])
+                            isi[seg-1,wa,si] = cstart[seg,wa,si] - adjval
+                            if isi[seg-1,wa,si] > 5:
+                                isi[seg-1,wa,si] = np.nan
+                            cdur[seg-1,wa,si] = abs(cend[seg,wa,si] - cstart[seg,wa,si])
+                        elif seg == 0:
+                            comparray_end = cstart[-1,:,si]
+                            adjval = find_nearest(comparray_end, cstart[0,wa,si])
+                            cnorm[wa,si] = adjval - cstart[0,wa,si]
+                            cdur[seg-1,wa,si] = abs(cend[seg,wa,si] - cstart[seg,wa,si])
+
         cdurnorm = cdur/cnorm
         isinorm = isi/cnorm
 
@@ -1279,13 +1396,16 @@ def motor_output_check(E,pulse_vals,c_thresh,titype):
             
             # #plot phase diffs for 2-sided system
             plot_phase_diff(num_waves, mean_phasediff, ant_phasediff, mid_phasediff, post_phasediff, pulse_vals, ti = titype + 'offsetcontra_' + str(offsetcontra) + '_' + str(contra_weights) + '_')
-                
+            
         else:
             #no phase diff to calculate in 1-sided system
             mean_phasediff, ant_phasediff, mid_phasediff, post_phasediff, side_diff = np.nan, np.nan, np.nan, np.nan, np.nan
 
-        #plot contraction duration of all segs, interseg phase lag, peak E amp as subplots 1 fig, all segs (fig 3 and then some)
-        plot_motor_out(segx,cdur,isi,side_diff,totalwaves,pulse_vals,ti = titype + 'offsetcontra_' + str(offsetcontra) + '_' + str(contra_weights) + '_')
+        # #plot contraction duration of all segs, interseg phase lag, peak E amp as subplots 1 fig, all segs (fig 3 and then some)
+        # plot_motor_out(segx,cdur,isi,side_diff,totalwaves,pulse_vals,ti = titype + 'offsetcontra_' + str(offsetcontra) + '_' + str(contra_weights) + '_')
+        
+        #run new set of plots--single ISI plot for all waves and all segs - left panel = contract spikes for whole time, all segs; right panel = delta spikes all waves
+        jitter_contract_delta(segx_in,rEms,isi_in,numwaves_in,I_pulse_in,ti)
         
     else:
         cstart,cend,cdur,cdurnorm,lat,isi,isinorm,totalwaves = np.nan, np.nan, np.nan*np.ones([8]), np.nan*np.ones([8]), np.nan, np.nan*np.ones([7]), np.nan*np.ones([7]), np.nan
@@ -1294,38 +1414,146 @@ def motor_output_check(E,pulse_vals,c_thresh,titype):
         
     return cstart, cend, cdur, cdurnorm, lat, isi, isinorm, side_diff, totalwaves, mean_phasediff, ant_phasediff, mid_phasediff, post_phasediff
 
-
+###STOPPED HERE - FIGURE OUT WHY THE JITTERS AREN'T LINING UP APPROAPRIATELY
+#ALSO CHECK THAT BEING PLOTTED IN CORRECT ORDER -- LOOKS FLIPPED RIGHT NOW (A8 ON TOP, A1 ON BOTTOM)
+#CONSIDER SWITCHING TO NO SUBPLOTS - JUST MAIN PLOT WITH Y = SEG, X = TIMESTEP AND CALL IT A DAY.,
 
 #%% test stability of "roll" behavior in response to perturbations
 
-# diff init and input roll after pause rest state and seg's to test on
-#do really long time courses to be sure of stability over time
-initloop = np.arange(0,2,0.6)
-#inputloop = np.arange(0,3.6,0.4)
-#inputloop = [3.2]
+# # diff init and input roll after pause rest state and seg's to test on
+# #do really long time courses to be sure of stability over time
+# initloop = np.arange(0,2,0.6)
+# #inputloop = np.arange(0,3.6,0.4)
+# #inputloop = [3.2]
+# segloop = [0,2,4,7]
+# # initloop = [0]
+# # inputloop = [0]
+# # segloop = [0]
+# # simtype = [0,1]
+# n_t = 300
+
+# #make naming options
+# simname = ['crawl', 'roll']
+# segname = ['A1','A3','A5','A8']
+
+# #loop for running stability analysis on all possible simulations of interest
+# pars = default_pars()
+# n_sides = 2
+# pulse = 550
+# alt = 0 #1 = alternating goro inputs in sine wave pattern
+# pulse_vals = np.array([[pars['I_ext_E'], pulse, alt]])
+# contra_choose = np.array([[5,0,0,0],[0,-5,0,0]])
+
+# inhib_mag = 0#4
+# inhib_dur = 0#0.1
+# inhib_pulse = np.array([-pars['I_ext_E']*inhib_mag, pulse*inhib_dur])
+# inhib_side = 1 # 0 = ipsi, 1 = contra
+
+# #try crawl or roll, 1 or 2 sides
+# sim = 1
+# sim_input = sim
+# if n_sides==1:
+#     contra_weights = [0,0,0,0]
+# else:
+#     contra_weights = contra_choose[sim]
+# #setup crawl or roll input
+# if sim == 0:
+#     offsetcontra = 1.1
+#     contra_dur = 1
+#     contra_dur_sub = 0
+#     offsetcontra_sub = 0
+# else: 
+#     offsetcontra_sub = 0.05
+#     contra_dur_sub = 0.01
+#     offsetcontra = 1.1
+#     contra_dur = 1-contra_dur_sub
+
+# #set this loop to match the perturb_init and perturb_input above
+# sign = 1
+# # for inputl in inputloop:
+# #     initl = 0
+# #     for seg,sloop in enumerate(segloop):
+# #         #perturbations
+# #         perturb_init = [1, sign, 0, sloop, initl] #no yes, E or I, ipsi contra, seg, init_val
+# #         perturb_input = [1, sign, 0, sloop, inputl, pars['rest_dur']+1, pulse-pars['rest_dur']+1] #yesno, I E or both, ipsi contra or both, seg, mag, time of onset, duration of input
+        
+# #         #run that sim
+# #         rEms,rIms,I_ext_E,I_ext_I = simulate_wc_multiseg(**default_pars(n_sides=n_sides, sim_input=sim_input,
+# #                                                            pulse_vals=pulse_vals, contra_weights=contra_weights, 
+# #                                                            offsetcontra = offsetcontra, contra_dur = contra_dur,
+# #                                                            offsetcontra_sub = offsetcontra_sub, contra_dur_sub = contra_dur_sub,
+# #                                                            inhib_pulse = inhib_pulse, inhib_side = inhib_side, 
+# #                                                            perturb_init = perturb_init, perturb_input = perturb_input))
+        
+# #         plot_multiseg_sameaxes(n_t,rEms,pulse_vals,contra_weights,offsetcontra,contra_dur,inhib_pulse,inhib_side,perturb_init,perturb_input,
+# #                          titype = simname[sim] +'_onesided_fpinit_rest1_' + segname[seg] +'_initpert' + str(initl) +'_excinputpert' + str(inputl))
+        
+# #         cstart, cend, cdur, cdurnorm, lat, isi, isinorm, side_diff, right, mean_phasediff, ant_phasediff, mid_phasediff, post_phasediff = motor_output_check(rEms,
+# #              pulse_vals,c_thresh = 0.3,titype = simname[sim] +'_onesided_fpinit_rest1_' + segname[seg] +'_initpert' + str(initl) +'_excinputpert' + str(inputl))
+
+# for initl in initloop:
+#     inputl = 0
+#     for seg,sloop in enumerate(segloop):
+#         #perturbations
+#         perturb_init = [1, sign, 0, sloop, initl] #no yes, E or I, ipsi contra, seg, init_val
+#         perturb_input = [1, sign, 0, sloop, inputl, pars['rest_dur']+1, pulse-pars['rest_dur']+1] #yesno, I E or both, ipsi contra or both, seg, mag, time of onset, duration of input 
+        
+#         #run that sim
+#         rEms,rIms,I_ext_E,I_ext_I = simulate_wc_multiseg(**default_pars(n_sides=n_sides, sim_input=sim_input,
+#                                                             pulse_vals=pulse_vals, contra_weights=contra_weights, 
+#                                                             offsetcontra = offsetcontra, contra_dur = contra_dur,
+#                                                             offsetcontra_sub = offsetcontra_sub, contra_dur_sub = contra_dur_sub,
+#                                                             inhib_pulse = inhib_pulse, inhib_side = inhib_side, 
+#                                                             perturb_init = perturb_init, perturb_input = perturb_input))
+        
+#         plot_multiseg_sameaxes(n_t,rEms,pulse_vals,contra_weights,offsetcontra,contra_dur,inhib_pulse,inhib_side,perturb_init,perturb_input,
+#                           titype = simname[sim] +'_onesided_fpinit_rest1_' + segname[seg] +'_excinitpert' + str(initl) +'_inputpert' + str(inputl))
+        
+#         cstart, cend, cdur, cdurnorm, lat, isi, isinorm, side_diff, right, mean_phasediff, ant_phasediff, mid_phasediff, post_phasediff = motor_output_check(rEms,
+#               pulse_vals,c_thresh = 0.3,titype = simname[sim] +'_onesided_fpinit_rest1_' + segname[seg] +'_excinitpert' + str(initl) +'_inputpert' + str(inputl))
+
+
+# #%%plot network analyses -- roll 2-sided
+# n_t = 350
+# plot_multiseg_sameaxes(n_t,rEms,pulse_vals,contra_weights,offsetcontra,contra_dur,inhib_pulse,inhib_side,perturb_input,
+#                  'crawl_rest1_pulse300x1.7_contrax1.1_initnonzerofp_contra_EE_5_')
+
+#perfect roll: 'roll_ipsi_init0.3_1dur_1.01contra_II_-10_'
+
+
+#%% updated perturbation type
+#single sided stability - here, excit hard code to set scalar value - single time step to start? then make multi timestep (maybe ~5 timesteps?)
+#loop over segment number and loop over perturb magnitude
+#do E pop and I pop
+
+#inputloop = np.arange(0.5,12.5,2)
+inputloop = [0]
+initloop = np.arange(0.5,5.5,1)
 segloop = [0,2,4,7]
-# initloop = [0]
-# inputloop = [0]
-# segloop = [0]
-# simtype = [0,1]
-n_t = 300
+n_t = np.arange(80,201)
+#randomize time of perturbation so can see impact at different points in the behavior
+#pert_starts = np.random.randint() #either od random, or consider doing range from 100 to 160? covers 2 waves?
+pert_start = 120
+pert_durs = np.arange(1,21,5)
+
 
 #make naming options
 simname = ['crawl', 'roll']
 segname = ['A1','A3','A5','A8']
+signs = ['inh','exc']
 
 #loop for running stability analysis on all possible simulations of interest
 pars = default_pars()
-n_sides = 2
-pulse = 550
+n_sides = 1
+pulse = 900 #this is for your regular input pulse NOT FOR YOUR PERTURBATIONs
 alt = 0 #1 = alternating goro inputs in sine wave pattern
 pulse_vals = np.array([[pars['I_ext_E'], pulse, alt]])
 contra_choose = np.array([[5,0,0,0],[0,-5,0,0]])
 
-inhib_mag = 0#4
-inhib_dur = 0#0.1
-inhib_pulse = np.array([-pars['I_ext_E']*inhib_mag, pulse*inhib_dur])
-inhib_side = 1 # 0 = ipsi, 1 = contra
+# inhib_mag = 0#4
+# inhib_dur = 0#0.1
+# inhib_pulse = np.array([-pars['I_ext_E']*inhib_mag, pulse*inhib_dur])
+# inhib_side = 1 # 0 = ipsi, 1 = contra
 
 #try crawl or roll, 1 or 2 sides
 sim = 0
@@ -1334,6 +1562,7 @@ if n_sides==1:
     contra_weights = [0,0,0,0]
 else:
     contra_weights = contra_choose[sim]
+
 #setup crawl or roll input
 if sim == 0:
     offsetcontra = 1.1
@@ -1347,57 +1576,28 @@ else:
     contra_dur = 1-contra_dur_sub
 
 #set this loop to match the perturb_init and perturb_input above
-sign = 1
-# for inputl in inputloop:
-#     initl = 0
-#     for seg,sloop in enumerate(segloop):
-#         #perturbations
-#         perturb_init = [1, sign, 0, sloop, initl] #no yes, E or I, ipsi contra, seg, init_val
-#         perturb_input = [1, sign, 0, sloop, inputl, pars['rest_dur']+1, pulse-pars['rest_dur']+1] #yesno, I E or both, ipsi contra or both, seg, mag, time of onset, duration of input
+for ein,eis in enumerate(signs):
+    signname = eis
+    for initl in initloop:
+        inputl = 0
+        for seg,sloop in enumerate(segloop):
+            for pd in pert_durs:
+                #perturbations
+                perturb_init = [1, ein, 0, sloop, initl, pars['rest_dur']+pert_start, pd-pars['rest_dur']+1] # perturb_init = [1, sign, 0, sloop, initl] #no yes, E or I, ipsi contra, seg, init_val
+                perturb_input = [1, ein, 0, sloop, inputl, pars['rest_dur']+pert_start, pd-pars['rest_dur']+1] #yesno, I E or both, ipsi contra or both, seg, mag, time of onset, duration of input
+                
+                #run that sim
+                rEms,rIms,I_ext_E,I_ext_I = simulate_wc_multiseg(**default_pars(n_sides=n_sides, sim_input=sim_input,
+                                                                    pulse_vals=pulse_vals, contra_weights=contra_weights, 
+                                                                    offsetcontra = offsetcontra, contra_dur = contra_dur,
+                                                                    offsetcontra_sub = offsetcontra_sub, contra_dur_sub = contra_dur_sub,
+                                                                    perturb_init = perturb_init, perturb_input = perturb_input))
+                
+                plot_multiseg_sameaxes(n_t,rEms,pulse_vals,contra_weights,offsetcontra,contra_dur,perturb_init,perturb_input,
+                                  titype = simname[sim] +'_onesided_fpinit_rest1_' + segname[seg] +'_initpert' + str(initl)+'_'+signname+'_inputpert' + str(inputl)+'_pertdur'+str(pd)+'_')
+                
+                jitter_contract_raw(n_t,rEms,pulse_vals,ti = simname[sim] +'_onesided_fpinit_rest1_' + segname[seg] +'_initpert' + str(initl)+'_'+signname+'_inputpert' + str(inputl)+'_pertdur'+str(pd)+'_')
+                
+                cstart, cend, cdur, cdurnorm, lat, isi, isinorm, side_diff, right, mean_phasediff, ant_phasediff, mid_phasediff, post_phasediff = motor_output_check(n_t, rEms,
+                      pulse_vals,c_thresh = 0.3,titype = simname[sim] +'_onesided_fpinit_rest1_' + segname[seg] +'_initpert' + str(initl)+'_'+signname+'_inputpert' + str(inputl)+'_pertdur='+str(pd)+'_')
         
-#         #run that sim
-#         rEms,rIms,I_ext_E,I_ext_I = simulate_wc_multiseg(**default_pars(n_sides=n_sides, sim_input=sim_input,
-#                                                            pulse_vals=pulse_vals, contra_weights=contra_weights, 
-#                                                            offsetcontra = offsetcontra, contra_dur = contra_dur,
-#                                                            offsetcontra_sub = offsetcontra_sub, contra_dur_sub = contra_dur_sub,
-#                                                            inhib_pulse = inhib_pulse, inhib_side = inhib_side, 
-#                                                            perturb_init = perturb_init, perturb_input = perturb_input))
-        
-#         plot_multiseg_sameaxes(n_t,rEms,pulse_vals,contra_weights,offsetcontra,contra_dur,inhib_pulse,inhib_side,perturb_init,perturb_input,
-#                          titype = simname[sim] +'_onesided_fpinit_rest1_' + segname[seg] +'_initpert' + str(initl) +'_excinputpert' + str(inputl))
-        
-#         cstart, cend, cdur, cdurnorm, lat, isi, isinorm, side_diff, right, mean_phasediff, ant_phasediff, mid_phasediff, post_phasediff = motor_output_check(rEms,
-#              pulse_vals,c_thresh = 0.3,titype = simname[sim] +'_onesided_fpinit_rest1_' + segname[seg] +'_initpert' + str(initl) +'_excinputpert' + str(inputl))
-
-for initl in initloop:
-    inputl = 0
-    for seg,sloop in enumerate(segloop):
-        #perturbations
-        perturb_init = [1, sign, 0, sloop, initl] #no yes, E or I, ipsi contra, seg, init_val
-        perturb_input = [1, sign, 0, sloop, inputl, pars['rest_dur']+1, pulse-pars['rest_dur']+1] #yesno, I E or both, ipsi contra or both, seg, mag, time of onset, duration of input 
-        
-        #run that sim
-        rEms,rIms,I_ext_E,I_ext_I = simulate_wc_multiseg(**default_pars(n_sides=n_sides, sim_input=sim_input,
-                                                            pulse_vals=pulse_vals, contra_weights=contra_weights, 
-                                                            offsetcontra = offsetcontra, contra_dur = contra_dur,
-                                                            offsetcontra_sub = offsetcontra_sub, contra_dur_sub = contra_dur_sub,
-                                                            inhib_pulse = inhib_pulse, inhib_side = inhib_side, 
-                                                            perturb_init = perturb_init, perturb_input = perturb_input))
-        
-        plot_multiseg_sameaxes(n_t,rEms,pulse_vals,contra_weights,offsetcontra,contra_dur,inhib_pulse,inhib_side,perturb_init,perturb_input,
-                          titype = simname[sim] +'_onesided_fpinit_rest1_' + segname[seg] +'_excinitpert' + str(initl) +'_inputpert' + str(inputl))
-        
-        cstart, cend, cdur, cdurnorm, lat, isi, isinorm, side_diff, right, mean_phasediff, ant_phasediff, mid_phasediff, post_phasediff = motor_output_check(rEms,
-              pulse_vals,c_thresh = 0.3,titype = simname[sim] +'_onesided_fpinit_rest1_' + segname[seg] +'_excinitpert' + str(initl) +'_inputpert' + str(inputl))
-
-
-## note - for input perturb... need a temporal component of interest relative to the roll freq and crawl freq? -- for now, doing tonic perturb and see what happens; can shorten later
-######### NOTE - WHEN I DO THIS FOR THE GATED MODEL, WILL ALSO NEED TO SET IT SUCH THAT THE SIMTYPE DETERMINES HOW I DO THE 2-SIDED INPUT -- MAKE SO THAT EQUAL FOR CRAWL AND ASYMM AT FIRST (10% FOR 0.05 DUR) FOR ROLL
-# NOTE FOR LATER - to clean this up, make default params for crawl and default for roll -- general shared then specific
-#%%plot network analyses -- roll 2-sided
-n_t = 350
-plot_multiseg_sameaxes(n_t,rEms,pulse_vals,contra_weights,offsetcontra,contra_dur,inhib_pulse,inhib_side,perturb_input,
-                 'crawl_rest1_pulse300x1.7_contrax1.1_initnonzerofp_contra_EE_5_')
-
-#perfect roll: 'roll_ipsi_init0.3_1dur_1.01contra_II_-10_'
-
