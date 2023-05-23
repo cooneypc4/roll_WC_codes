@@ -783,7 +783,7 @@ rE, rI, drE, drI = simulate_wc(**pars)
 # isolated_timeplot(np.arange(0,100), rE, rI)#, rE2, rI2)
 
 #show activity relationship between E and I at set timesteps
-plot_activity_phase(n_t=4000,rE = rE, rI = rI, I_pulse=np.ones(100)*pars['I_ext_E'])
+plot_activity_phase(n_t=140,rE = rE, rI = rI, I_pulse=np.ones(100)*pars['I_ext_E'])
 
 #%% do with multiple input values - seems that <1.7 - no activity; = 3.9 saturate at 0.5!
 # testp = np.arange(0.65,4.15,0.25)
