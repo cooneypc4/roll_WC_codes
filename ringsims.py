@@ -240,6 +240,80 @@ def plotbothheatmapthrutime(x_freqs,omegax,coupling_within,y_freqs,omegay,coupli
     f.savefig(ti+'_heatmap_frequency_discret0.6.svg', format = 'svg', dpi = 1200)
     f.savefig(ti+'_heatmap_frequency_discret0.6.png', format = 'png', dpi = 1200)
     
+
+def heatmap_params_xyphis(meanphi,varphi,within_range,between_range,stype,plottitle):
+    f,[ax1,ax2] = plt.subplots(ncols=2)
+    winlabels = [str(round(w,2)) for w in within_range]
+    btlabels = [str(round(b,2)) for b in between_range]
+    sb.heatmap(meanphi,ax=ax1)
+    sb.heatmap(varphi,ax=ax2)
+    if len(between_range)>10:
+        ax1.set_xticks(np.arange(0,len(between_range),2))
+        ax2.set_xticks(np.arange(0,len(between_range),2))
+        ax1.set_yticklabels(winlabels,fontsize=7)
+        ax1.set_xticklabels(btlabels[::2],fontsize=7)
+        ax2.set_yticklabels(winlabels,fontsize=7)
+        ax2.set_xticklabels(btlabels[::2],fontsize=7)
+    else:
+        ax1.set_yticklabels(winlabels)
+        ax1.set_xticklabels(btlabels)
+        ax2.set_yticklabels(winlabels)
+        ax2.set_xticklabels(btlabels)
+    if stype == 0:
+        tist = "Wave - "
+    elif stype == 1:
+        tist = "Global Oscill - "
+    ax1.set(xlabel="Coupling Between", ylabel="Coupling Within", title = tist + r"$<\phi>$")
+    ax2.set(xlabel="Coupling Between", ylabel="",  title = tist + r"$\sigma_\phi$")
+ 
+    plt.show()
+    f.savefig(plottitle+'.svg', format = 'svg', dpi = 1200)
+    f.savefig(plottitle+'.png', format = 'png', dpi = 1200)
+    
+def heatmap_params_ijphis(meanphix,varphix,meanphiy,varphiy,within_range,between_range,stype,plottitle):
+    f,((ax1,ax2),(ax3,ax4)) = plt.subplots(nrows=2,ncols=2)
+    winlabels = [str(round(w,2)) for w in within_range]
+    btlabels = [str(round(b,2)) for b in between_range]
+    sb.heatmap(meanphix,ax=ax1)
+    sb.heatmap(varphix,ax=ax2)
+    sb.heatmap(meanphiy,ax=ax3)
+    sb.heatmap(varphiy,ax=ax4)
+    if len(between_range)>10:
+        ax1.set_xticks(np.arange(0,len(between_range),2))
+        ax2.set_xticks(np.arange(0,len(between_range),2))
+        ax3.set_xticks(np.arange(0,len(between_range),2))
+        ax4.set_xticks(np.arange(0,len(between_range),2))
+        
+        ax1.set_xticklabels(btlabels[::2],fontsize=7)
+        ax2.set_xticklabels(btlabels[::2],fontsize=7)
+        ax3.set_xticklabels(btlabels[::2],fontsize=7)
+        ax4.set_xticklabels(btlabels[::2],fontsize=7)
+    else:
+        ax1.set_xticklabels(btlabels)
+        ax2.set_xticklabels(btlabels)
+    if len(within_range)>7:
+        ax1.set_yticklabels(winlabels[::2],fontsize=7)
+        ax2.set_yticklabels(winlabels[::2],fontsize=7)
+        ax3.set_yticklabels(winlabels[::2],fontsize=7)
+        ax4.set_yticklabels(winlabels[::2],fontsize=7)
+    else:
+        ax1.set_yticklabels(winlabels)
+        ax2.set_yticklabels(winlabels)
+    
+    if stype == 0:
+        tist = "Wave - "
+    elif stype == 1:
+        tist = "Global Oscill - "
+    ax1.set(xlabel="Coupling Between", ylabel="Coupling Within", title = tist + r"$<\phi>$")
+    ax2.set(xlabel="Coupling Between", ylabel="",  title = tist + r"$\sigma_\phi$")
+    ax3.set(xlabel="Coupling Between", ylabel="Coupling Within")
+    ax4.set(xlabel="Coupling Between", ylabel="")
+ 
+    plt.show()
+    f.savefig(plottitle+'.svg', format = 'svg', dpi = 1200)
+    f.savefig(plottitle+'.png', format = 'png', dpi = 1200)
+
+
 #%% equations
 #calculate thetas for each node w/ pre-defined traveling wave equation from Ermentrout & Ko, 2009
 def calcfreqs_travelwave(omega,timesteps,nodes):
@@ -377,7 +451,7 @@ for ia,a_within in enumerate(a_within_range):
 #params for sim
 num_rings = 2
 omegaeach = [omegax, omegay]
-a_within = 0.375
+#a_within = 0.375
 
 #initialization values - set stype 0 = wave, 1 = global oscill
 stype = 0
@@ -388,43 +462,45 @@ elif stype == 1:
     ti_start = 'oscillinit_tworings_'
 
 #a_between_range = ([-1,0,0.1])
-a_between_range = np.arange(-0.5,0.5,0.1)
+a_between_range = np.arange(-0.2,0.2,0.025).round(3)
+a_within_range = np.arange(0.275,0.475,.1).round(3)
+meanphixy_allsims = -np.ones([len(a_within_range),len(a_between_range)])
+varphixy_allsims = -np.ones([len(a_within_range),len(a_between_range)])
+meanphix = -np.ones([len(a_within_range),len(a_between_range)])
+varphix = -np.ones([len(a_within_range),len(a_between_range)])
+meanphiy = -np.ones([len(a_within_range),len(a_between_range)])
+varphiy = -np.ones([len(a_within_range),len(a_between_range)])
 
-for a_between in a_between_range:
-    #run sim & calc phi's for both rings - NO interring coupling
-    rings_thetas, rings_dthetas = simtheta(num_rings,nodes,omegax,xinit,omegay,yinit,a_within,a_between,timesteps)
-    phi_x_ijs = calcphi_ij(rings_thetas[:,:,0])
-    phi_y_ijs = calcphi_ij(rings_thetas[:,:,1])
-    
-    phi_xy = calcphi_xy(rings_thetas[:,:,0],rings_thetas[:,:,1])
-    
-    #plot each ring's outputs
-    # plotmodovertime(nodes,timesteps,rings_thetas[:,:,0],omegaeach,a_within,a_between,'Ring X','xring_'+ str(len(timesteps)) +'timesteps'+'couple_'+str(a_within)+'_'+str(omegaeach)+'_')
-    # plotmodovertime(nodes,timesteps,rings_thetas[:,:,1],omegaeach,a_within,a_between,'Ring Y','yring_'+ str(len(timesteps)) +'timesteps'+'couple_'+str(a_within)+'_'+str(omegaeach)+'_')
-    
-    #plotphiovertime(phi_x_ijs,timesteps,omegaeach,a_within,a_between,'Ring X','xring_'+ str(len(timesteps)) +'timesteps'+'couple_'+str(a_within)+'_')
-    #plotphiovertime(phi_y_ijs,timesteps,omegaeach,a_within,a_between,'Ring Y','yring_'+ str(len(timesteps)) +'timesteps'+'couple_'+str(a_within)+'_')
-    
-    plotbothheatmapthrutime(rings_thetas[:,:,0],omegax,a_within,rings_thetas[:,:,1],omegay,a_between,'Both Rings','bothrings_initdiff0.5pi_discret0.1pi_'+str(len(timesteps))+'timesteps'+'_couplewin_'+str(a_within)+'_couplebt_'+str(a_between)+'_')
-    
-    # plotbothmodovertime(nodes,timesteps,rings_thetas[:,:,0],rings_thetas[:,:,1],omegaeach,a_within,a_between,'Ring X & Ring Y',
-    #                     'bothrings_'+str(len(timesteps))+'timesteps'+'_couplewin_'+str(a_within)+'_couplebt_'+str(a_between)+'_'+str(omegaeach)+'_')
-    
-    # plotbothphiovertime(phi_xy,timesteps,omegaeach,a_within,a_between,'Between Rings',
-    #                     'bothrings_'+ str(len(timesteps)) +'timesteps'+'couple_'+str(a_within)+'_couplebt_'+str(a_between)+'_'+str(omegaeach)+'_')
-    
-    plotbothphiovertime(phi_xy,timesteps,omegaeach,a_within,a_between,'Between Rings',
-                        'bothrings_initdiff0.5pi_discret0.1pi_'+ str(len(timesteps)) +'timesteps'+'couple_'+str(a_within)+'_couplebt_'+str(a_between)+'_')
+for ai,a_within in enumerate(a_within_range):
+    for ab,a_between in enumerate(a_between_range):
+        #run sim & calc phi's for both rings - NO interring coupling
+        rings_thetas, rings_dthetas = simtheta(num_rings,nodes,omegax,xinit,omegay,yinit,a_within,a_between,timesteps)
+        phi_x_ijs = calcphi_ij(rings_thetas[:,:,0])
+        phi_y_ijs = calcphi_ij(rings_thetas[:,:,1])
+        
+        phi_xy = calcphi_xy(rings_thetas[:,:,0],rings_thetas[:,:,1])
+        
+        #plot each ring's outputs
+        plotbothheatmapthrutime(rings_thetas[:,:,0],omegax,a_within,rings_thetas[:,:,1],omegay,a_between,'Both Rings','bothrings_'+ti_start+'initdiff0.5pi_discret0.1pi_'+str(len(timesteps))+'timesteps'+'_couplewin_'+str(a_within)+'_couplebt_'+str(a_between)+'_')    
+        plotbothphiovertime(phi_xy,timesteps,omegaeach,a_within,a_between,'Between Rings',
+                             'bothrings_'+ti_start+'initdiff0.5pi_discret0.1pi_'+ str(len(timesteps)) +'timesteps'+'couple_'+str(a_within)+'_couplebt_'+str(a_between)+'_')
+        
+        #store this phi_xy
+        meanphix[ai,ab] = np.mean(phi_x_ijs[:,int(phi_x_ijs.shape[1]/2):]%2*np.pi)
+        varphix[ai,ab] = np.var(phi_x_ijs[:,int(phi_x_ijs.shape[1]/2):]%2*np.pi)
+        meanphiy[ai,ab] = np.mean(phi_y_ijs[:,int(phi_y_ijs.shape[1]/2):]%2*np.pi)
+        varphiy[ai,ab] = np.var(phi_y_ijs[:,int(phi_y_ijs.shape[1]/2):]%2*np.pi)
+        
+        meanphixy_allsims[ai,ab] = np.mean(phi_xy[:,int(phi_xy.shape[1]/2):]%2*np.pi)
+        varphixy_allsims[ai,ab] = np.var(phi_xy[:,int(phi_xy.shape[1]/2):]%2*np.pi)
+
+#plot heatmap of the simulation params
+heatmap_params_xyphis(meanphixy_allsims,varphixy_allsims,a_within_range,a_between_range,stype,ti_start+'0.5pidiff_heatmap_params_xyphis')
+
+heatmap_params_ijphis(meanphix,varphix,meanphiy,varphiy,a_within_range,a_between_range,stype,ti_start+'0.5pidiff_heatmap_params_ijphis')
 
 
-####stopped here
-
-#then test the antiphase and sync waves - between ring coupling
-#do the same for global oscill's
-
-#generate a plot that compares a_between with a_within in terms of each other? and in terms of phase diffs -- maybe plot as heatmap or somehting or curve? fig best way to show
-#thenclean code and backup all + move plots out of Docs folder
-#read papers and or start writing this all up in LaTex
+#plot the delta phi relative to just a_bt -- what is closest to optimal
 
     
 #%% PREVIOUS stuff
