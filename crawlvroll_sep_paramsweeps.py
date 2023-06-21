@@ -53,16 +53,16 @@ def heatmap_params_LRphis(meanphi_LR,varphi_LR,intersegprops,contraprops,stype,p
     f,[ax1,ax2] = plt.subplots(ncols=2)
     ilabels = intersegprops
     clabels = contraprops
-    ilabels = [str(round(i,2)) for i in intersegprops]
-    clabels = [str(round(c,2)) for c in contraprops]
+    # ilabels = [str(round(i,2)) for i in intersegprops]
+    # clabels = [str(round(c,2)) for c in contraprops]
     sb.heatmap(meanphi_LR,ax=ax1)
     sb.heatmap(varphi_LR,ax=ax2)
-    if len(contraprops)>10:
+    if len(contraprops)>10 or len(intersegprops)>10:
         ax1.set_xticks(np.arange(0,len(contraprops),2))
         ax2.set_xticks(np.arange(0,len(contraprops),2))
-        ax1.set_yticklabels(ilabels,fontsize=8)
+        ax1.set_yticklabels(ilabels[::2],fontsize=8)
         ax1.set_xticklabels(clabels[::2],fontsize=8)
-        ax2.set_yticklabels(ilabels,fontsize=8)
+        ax2.set_yticklabels(ilabels[::2],fontsize=8)
         ax2.set_xticklabels(clabels[::2],fontsize=8)
     else:
         ax1.set_yticklabels(ilabels)
@@ -73,8 +73,8 @@ def heatmap_params_LRphis(meanphi_LR,varphi_LR,intersegprops,contraprops,stype,p
         tist = "Crawl - "
     elif stype == 1:
         tist = "Roll - "
-    ax1.set(xlabel="EE Contra Coupling", ylabel="EI Contra Coupling", title = tist + r"$<\phi>_{contra}$")
-    ax2.set(xlabel="EE Contra Coupling", ylabel="",  title = r"$\sigma^2_\phi - contra$")
+    ax1.set(xlabel="Contra Eff Coupling", ylabel="Inter Eff Coupling", title = tist + r"$<\phi>_{contra}$")
+    ax2.set(xlabel="Contra Eff Coupling", ylabel="",  title = r"$\sigma^2_\phi - contra$")
  
     plt.show()
     f.savefig(plottitle+'.svg', format = 'svg', dpi = 1200)
@@ -86,15 +86,15 @@ def heatmap_params_intersegphis(meanphi_interseg_L,varphi_interseg_L,meanphi_int
     f,((ax1,ax2),(ax3,ax4)) = plt.subplots(nrows=2,ncols=2)
     ilabels = intersegprops
     clabels = contraprops
-    ilabels = [str(round(i,2)) for i in intersegprops]
-    clabels = [str(round(c,2)) for c in contraprops]
+    # ilabels = [str(round(i,2)) for i in intersegprops]
+    # clabels = [str(round(c,2)) for c in contraprops]
     sb.heatmap(meanphi_interseg_L,ax=ax1)
     sb.heatmap(varphi_interseg_L,ax=ax2)
     sb.heatmap(meanphi_interseg_R,ax=ax3)
     sb.heatmap(varphi_interseg_R,ax=ax4)
-    if len(contraprops)>10:
-        ax1.set_xticks(np.arange(0,len(contraprops),2))
-        ax2.set_xticks(np.arange(0,len(contraprops),2))
+    if len(contraprops)>=10:
+        # ax1.set_xticks(np.arange(0,len(contraprops),2))
+        # ax2.set_xticks(np.arange(0,len(contraprops),2))
         ax3.set_xticks(np.arange(0,len(contraprops),2))
         ax4.set_xticks(np.arange(0,len(contraprops),2))
         
@@ -106,10 +106,10 @@ def heatmap_params_intersegphis(meanphi_interseg_L,varphi_interseg_L,meanphi_int
         ax1.set_xticklabels(clabels)
         ax2.set_xticklabels(clabels)
     if len(intersegprops)>7:
-        ax1.set_yticklabels(ilabels[::2],fontsize=7)
-        ax2.set_yticklabels(ilabels[::2],fontsize=7)
-        ax3.set_yticklabels(ilabels[::2],fontsize=7)
-        ax4.set_yticklabels(ilabels[::2],fontsize=7)
+        ax1.set_yticklabels(ilabels[::3],fontsize=7)
+        ax2.set_yticklabels(ilabels[::3],fontsize=7)
+        ax3.set_yticklabels(ilabels[::3],fontsize=7)
+        ax4.set_yticklabels(ilabels[::3],fontsize=7)
     else:
         ax1.set_yticklabels(ilabels,fontsize=7)
         ax2.set_yticklabels(ilabels,fontsize=7)
@@ -122,8 +122,8 @@ def heatmap_params_intersegphis(meanphi_interseg_L,varphi_interseg_L,meanphi_int
         tist = "Roll - "
     ax1.set(xlabel="", title = tist + r"$<\phi>_{interseg}$")
     ax2.set(xlabel="", ylabel="",  title = r"$\sigma^2_\phi - interseg$")
-    ax3.set(xlabel="EE Contra Coupling", ylabel="EI Contra Coupling")
-    ax4.set(xlabel="EE Contra Coupling", ylabel="")
+    ax3.set(xlabel="Contra Eff Coupling", ylabel="Inter Eff Coupling")
+    ax4.set(xlabel="Contra Eff Coupling", ylabel="")
  
     plt.show()
     f.savefig(plottitle+'.svg', format = 'svg', dpi = 1200)
@@ -529,7 +529,7 @@ for indi,i in enumerate(intersegwprop):
                                                             perturb_init = perturb_init, perturb_input = perturb_input))
         
         #plot the activity heatmap
-        plotbothsidesheatmap(n_t,rEms,pulse_vals,contra_weights,offsetcontra,contra_dur,perturb_input,-i,plotti = simname[sim],ti = simname[sim] + '_Ipropinter=' + str(-i) + '_Ipropcontra=' + str(-j))
+        #plotbothsidesheatmap(n_t,rEms,pulse_vals,contra_weights,offsetcontra,contra_dur,perturb_input,-i,plotti = simname[sim],ti = simname[sim] + '_Ipropinter=' + str(-i) + '_Ipropcontra=' + str(-j))
         
         #calc + store the phi's - interseg + LR
         cstart, cend, totalwaves, mean_phasediff_LR, phasediff_LR, mean_phasediff_interseg, phasediff_interseg = motor_output_check(n_t, rEms, pulse_vals, c_thresh, titype = simname[sim] + '_')
@@ -547,25 +547,89 @@ for indi,i in enumerate(intersegwprop):
 heatmap_params_LRphis(phi_propcontra,varphi_propcontra,intersegxvals_prop,contrayvals_prop,sim,simname[sim] + '_ei_props_intersegvcontra')
 heatmap_params_intersegphis(phi_propL,varphi_propL,phi_propR,varphi_propR,intersegxvals_prop,contrayvals_prop,sim,simname[sim] + '_ei_props_eachside')
 
-#stopped here 
-#figure out what's going on with weights actually being used appropriately
-#test taht input iteration is correct and that fxn is using that instead of defaultpars vals
-#fix where divide by zero in phi calcs so that just nan in output and plots
 
-#get plot and cross-check with Gjogjieva paper
+#%% run simulations - iterate over the parameter space like above, both inter and contra, 
+#but instead of proportions, do simple subtractions over iterated param space
+n_t = np.arange(0,200)
+simname = ['crawl', 'roll']
+pars = default_pars()
+n_sides = 2
+pulse = 900 #this is for your regular input pulse NOT FOR YOUR PERTURBATIONs
+alt = 0 #1 = alternating goro inputs in sine wave pattern
+pulse_vals = np.array([[pars['I_ext_E'], pulse, alt]])
+c_thresh = 0.3
 
-#do again for next set of plots
+#setup sim type
+sim = 1
+sim_input = sim
+if sim == 0: #crawl input
+    offsetcontra = 1.1
+    contra_dur = 1
+    contra_dur_sub = 0
+    offsetcontra_sub = 0
+else: #roll input
+    offsetcontra_sub = 0.05
+    contra_dur_sub = 0.01
+    offsetcontra = 1.1
+    contra_dur = 1-contra_dur_sub
 
-#then check weights compared to ring
+#setup interseg & contra weights to test based on previous model values for EE (interseg = 20, contra = 5)
+wEEadjtest = 20 # keep interseg E the same, but vary I according to proportions
+contraEIfix = -5 
+wEIadjtest = np.arange(-40,2,2)
+contraEEtest = np.arange(1,11,1)
 
-#then do midseg test
+#calculate the proportion of E/I for contra weight type to use as x,y axes heatmap
+intersegxvals_sub = [str(wEEadjtest + i) for i in wEIadjtest]
+contrayvals_sub = [str(contraEIfix + j) for j in contraEEtest]
+    
+#preset heatmap mats for storing the various interseg and contra phi values - for proportions plots - EE contra and EE interseg both fixed; vary EI vals and calculate proportion
+phi_propL = -np.ones([len(wEIadjtest), len(contraEEtest)])
+phi_propR =  -np.ones([len(wEIadjtest), len(contraEEtest)])
+phi_propcontra =  -np.ones([len(wEIadjtest), len(contraEEtest)])
+varphi_propL = -np.ones([len(wEIadjtest), len(contraEEtest)])
+varphi_propR =  -np.ones([len(wEIadjtest), len(contraEEtest)])
+varphi_propcontra =  -np.ones([len(wEIadjtest), len(contraEEtest)])
 
-#fin by Mon; move onto EM
-
-#Tues - keep going EM, be prepping Allen
-#if time, set up stability sims too and run overnight some time
-
-#when Ashok back, update on model and EM
+#iterate over different interseg and contralateral weights
+for indi,i in enumerate(wEIadjtest):
+    wEI = i
+    for indj,j in enumerate(contraEEtest):
+        contraEE = j
+        print(wEEadjtest)
+        print(wEI)
+        contra_weights = [j,contraEIfix,0,0]
+        print(contra_weights)
+        
+        #no perturbations       
+        perturb_init = [0]
+        perturb_input = [0]
+        
+        #run that sim
+        rEms,rIms,I_ext_E,I_ext_I = simulate_wc_multiseg(**default_pars(n_sides=n_sides, sim_input=sim_input,
+                                                            pulse_vals=pulse_vals, EEadjtest=wEEadjtest, EIadjtest=wEI, contra_weights=contra_weights, 
+                                                            offsetcontra = offsetcontra, contra_dur = contra_dur,
+                                                            offsetcontra_sub = offsetcontra_sub, contra_dur_sub = contra_dur_sub,
+                                                            perturb_init = perturb_init, perturb_input = perturb_input))
+        
+        #plot the activity heatmap
+        #plotbothsidesheatmap(n_t,rEms,pulse_vals,contra_weights,offsetcontra,contra_dur,perturb_input,-i,plotti = simname[sim],ti = simname[sim] + '_Ipropinter=' + str(-i) + '_Ipropcontra=' + str(-j))
+        
+        #calc + store the phi's - interseg + LR
+        cstart, cend, totalwaves, mean_phasediff_LR, phasediff_LR, mean_phasediff_interseg, phasediff_interseg = motor_output_check(n_t, rEms, pulse_vals, c_thresh, titype = simname[sim] + '_')
+        
+        #take mean of the interseg and LR phase diffs across all "waves"
+        phi_propcontra[indi,indj] = np.nanmean(mean_phasediff_LR)
+        varphi_propcontra[indi,indj] = np.nanvar(mean_phasediff_LR)
+        
+        phi_propL[indi,indj] = np.nanmean(mean_phasediff_interseg)
+        varphi_propL[indi,indj] = np.nanvar(mean_phasediff_interseg)
+        phi_propR[indi,indj] = np.nanmean(mean_phasediff_interseg)
+        varphi_propR[indi,indj] = np.nanvar(mean_phasediff_interseg)
+        
+#plot the phi's over the whole param space
+heatmap_params_LRphis(phi_propcontra,varphi_propcontra,intersegxvals_sub,contrayvals_sub,sim,simname[sim] + '_ee_subtractfixedEI_intersegvcontra')
+heatmap_params_intersegphis(phi_propL,varphi_propL,phi_propR,varphi_propR,intersegxvals_sub,contrayvals_sub,sim,simname[sim] + '_ee_subtractfixedEI_eachside')
 
 
 #%% run simulations - iterate over the parameter space - contra magnitudes, fixed interseg weights
@@ -579,7 +643,7 @@ pulse_vals = np.array([[pars['I_ext_E'], pulse, alt]])
 c_thresh = 0.3
 
 #setup sim type
-sim = 0
+sim = 1
 sim_input = sim
 if sim == 0: #crawl input
     offsetcontra = 1.1
@@ -642,6 +706,18 @@ heatmap_params_intersegphis(phi_propL,varphi_propL,phi_propR,varphi_propR,contra
 
 
 #%%
+#then check weights compared to ring
+
+#then do midseg test
+
+#fin by Mon; move onto EM
+
+#Tues - keep going EM, be prepping Allen
+#if time, set up stability sims too and run overnight some time
+
+#when Ashok back, update on model and EM
+
+
 ##problem to think about - though the itnerseg wegiths are equal, 
 #the I pop threshold is lower and gain is higher... so faster inhibition probably part of the key togettign wave? need to think more about consolidating w/ Harris too
 
