@@ -55,8 +55,13 @@ def heatmap_params_LRphis(meanphi_LR,varphi_LR,intersegprops,contraprops,stype,p
     clabels = contraprops
     # ilabels = [str(round(i,2)) for i in intersegprops]
     # clabels = [str(round(c,2)) for c in contraprops]
-    sb.heatmap(meanphi_LR,ax=ax1)
-    sb.heatmap(varphi_LR,ax=ax2)
+    #pull out nans to make diff color
+    cmap = plt.cm.get_cmap("rocket").copy()
+    cmap.set_bad('darkgray')
+    maskmean = np.isnan(meanphi_LR)
+    maskvar = np.isnan(varphi_LR)
+    sb.heatmap(meanphi_LR,ax=ax1,cmap=cmap,mask=maskmean,vmin=0,vmax=0.5)
+    sb.heatmap(varphi_LR,ax=ax2,cmap=cmap,mask=maskvar,vmin=0,vmax=0.1)
     if len(contraprops)>10 or len(intersegprops)>10:
         ax1.set_xticks(np.arange(0,len(contraprops),2))
         ax2.set_xticks(np.arange(0,len(contraprops),2))
@@ -88,10 +93,18 @@ def heatmap_params_intersegphis(meanphi_interseg_L,varphi_interseg_L,meanphi_int
     clabels = contraprops
     # ilabels = [str(round(i,2)) for i in intersegprops]
     # clabels = [str(round(c,2)) for c in contraprops]
-    sb.heatmap(meanphi_interseg_L,ax=ax1)
-    sb.heatmap(varphi_interseg_L,ax=ax2)
-    sb.heatmap(meanphi_interseg_R,ax=ax3)
-    sb.heatmap(varphi_interseg_R,ax=ax4)
+    #pull out nans to make diff color
+    cmap = plt.cm.get_cmap("rocket").copy()
+    cmap.set_bad('darkgray')
+    maskmean1 = np.isnan(meanphi_interseg_L)
+    maskvar1 = np.isnan(varphi_interseg_L)
+    maskmean2 = np.isnan(meanphi_interseg_R)
+    maskvar2 = np.isnan(varphi_interseg_R)
+    
+    sb.heatmap(meanphi_interseg_L,ax=ax1,cmap=cmap,mask=maskmean1,vmin=0,vmax=0.5)
+    sb.heatmap(varphi_interseg_L,ax=ax2,cmap=cmap,mask=maskvar1,vmin=0,vmax=0.1)
+    sb.heatmap(meanphi_interseg_R,ax=ax3,cmap=cmap,mask=maskmean2,vmin=0,vmax=0.5)
+    sb.heatmap(varphi_interseg_R,ax=ax4,cmap=cmap,mask=maskvar2,vmin=0,vmax=0.1)
     if len(contraprops)>=10:
         # ax1.set_xticks(np.arange(0,len(contraprops),2))
         # ax2.set_xticks(np.arange(0,len(contraprops),2))
@@ -575,30 +588,42 @@ else: #roll input
 
 #setup interseg & contra weights to test based on previous model values for EE (interseg = 20, contra = 5)
 wEEadjtest = 20 # keep interseg E the same, but vary I according to proportions
-contraEIfix = -5 
 wEIadjtest = np.arange(-40,2,2)
-contraEEtest = np.arange(1,11,1)
+
+# # #fix EI version
+# # contraEIfix = -5 
+# # contraEEtest = np.arange(1,11,1)
+
+# #fix EE version
+contraEEfix = 0.1
+contraEItest = -np.arange(1,11,1)
+
+#temp for roll antiphase plots
+# wEEadjtest = 20
+# wEIadjtest = [-20]
+# contraEEfix = 0
+# contraEItest = [-5]
 
 #calculate the proportion of E/I for contra weight type to use as x,y axes heatmap
 intersegxvals_sub = [str(wEEadjtest + i) for i in wEIadjtest]
-contrayvals_sub = [str(contraEIfix + j) for j in contraEEtest]
+contrayvals_sub = [str(contraEEfix + j) for j in contraEItest]
     
 #preset heatmap mats for storing the various interseg and contra phi values - for proportions plots - EE contra and EE interseg both fixed; vary EI vals and calculate proportion
-phi_propL = -np.ones([len(wEIadjtest), len(contraEEtest)])
-phi_propR =  -np.ones([len(wEIadjtest), len(contraEEtest)])
-phi_propcontra =  -np.ones([len(wEIadjtest), len(contraEEtest)])
-varphi_propL = -np.ones([len(wEIadjtest), len(contraEEtest)])
-varphi_propR =  -np.ones([len(wEIadjtest), len(contraEEtest)])
-varphi_propcontra =  -np.ones([len(wEIadjtest), len(contraEEtest)])
+phi_propL = -np.ones([len(wEIadjtest), len(contraEItest)])
+phi_propR =  -np.ones([len(wEIadjtest), len(contraEItest)])
+phi_propcontra =  -np.ones([len(wEIadjtest), len(contraEItest)])
+varphi_propL = -np.ones([len(wEIadjtest), len(contraEItest)])
+varphi_propR =  -np.ones([len(wEIadjtest), len(contraEItest)])
+varphi_propcontra =  -np.ones([len(wEIadjtest), len(contraEItest)])
 
 #iterate over different interseg and contralateral weights
 for indi,i in enumerate(wEIadjtest):
     wEI = i
-    for indj,j in enumerate(contraEEtest):
-        contraEE = j
+    for indj,j in enumerate(contraEItest):
+        contraEI = j
         print(wEEadjtest)
         print(wEI)
-        contra_weights = [j,contraEIfix,0,0]
+        contra_weights = [contraEEfix,j,0,0]
         print(contra_weights)
         
         #no perturbations       
@@ -627,9 +652,9 @@ for indi,i in enumerate(wEIadjtest):
         phi_propR[indi,indj] = np.nanmean(mean_phasediff_interseg)
         varphi_propR[indi,indj] = np.nanvar(mean_phasediff_interseg)
         
-#plot the phi's over the whole param space
-heatmap_params_LRphis(phi_propcontra,varphi_propcontra,intersegxvals_sub,contrayvals_sub,sim,simname[sim] + '_ee_subtractfixedEI_intersegvcontra')
-heatmap_params_intersegphis(phi_propL,varphi_propL,phi_propR,varphi_propR,intersegxvals_sub,contrayvals_sub,sim,simname[sim] + '_ee_subtractfixedEI_eachside')
+# #plot the phi's over the whole param space
+heatmap_params_LRphis(phi_propcontra,varphi_propcontra,intersegxvals_sub,contrayvals_sub,sim,simname[sim] + '_ei_subtractfixedEEof0.1_intersegvcontra')
+heatmap_params_intersegphis(phi_propL,varphi_propL,phi_propR,varphi_propR,intersegxvals_sub,contrayvals_sub,sim,simname[sim] + '_ei_subtractfixedEEof0.1_eachside')
 
 
 #%% run simulations - iterate over the parameter space - contra magnitudes, fixed interseg weights
