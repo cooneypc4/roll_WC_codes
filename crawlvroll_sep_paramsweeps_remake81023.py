@@ -44,18 +44,15 @@ def plotbothsidesheatmap(n_t,rEms,pulse_vals,contra_weights,offsetcontra,contra_
 
     #plt.tight_layout()
     plt.show()
-    #fig.savefig((ti + str(n_t) + '_2side_multiseg_traces.svg'), format = 'svg', dpi = 1200)
-    f.savefig((ti + str(n_t[0]) + str(n_t[-1]) + '_2side_multiseg_heatmaps_redo.png'), format = 'png', dpi = 1200)
-    f.savefig((ti + str(n_t[0]) + str(n_t[-1]) + '_2side_multiseg_heatmaps_redo.svg'), format = 'svg', dpi = 1200)
+    f.savefig((ti + str(n_t[0]) + str(n_t[-1]) + '_2side_multiseg_heatmaps.svg'), format = 'svg', dpi = 1200)
+    f.savefig((ti + str(n_t[0]) + str(n_t[-1]) + '_2side_multiseg_heatmaps.png'), format = 'png', dpi = 1200)
 
 
 #fxn for plotting the LR phase diff with diff params
-def heatmap_params_LRphis(meanphi_LR,varphi_LR,intersegprops,contraprops,stype,plottitle):
+def heatmap_params_LRphis(meanphi_LR,varphi_LR,intersegprops,contraprops,stype,svector,savetitle):
     f,[ax1,ax2] = plt.subplots(ncols=2)
-    ilabels = intersegprops.copy()
-    #ilabels.reverse()
-    clabels = contraprops.copy()
-    #clabels.reverse()
+    ilabels = intersegprops
+    clabels = contraprops
     # ilabels = [str(round(i,2)) for i in intersegprops]
     # clabels = [str(round(c,2)) for c in contraprops]
     #pull out nans to make diff color
@@ -82,20 +79,18 @@ def heatmap_params_LRphis(meanphi_LR,varphi_LR,intersegprops,contraprops,stype,p
     elif stype == 1:
         tist = "Roll - "
     ax1.set(xlabel="Contra Eff Coupling", ylabel="Inter Eff Coupling", title = tist + r"$<\phi>_{contra}$")
-    ax2.set(xlabel="Contra Eff Coupling", ylabel="",  title = r"$\sigma^2_\phi - contra$")
+    ax2.set(xlabel="Contra Eff Coupling", ylabel=str(svector),  title = r"$\sigma^2_\phi - contra$")
  
     plt.show()
-    f.savefig(plottitle+'_redo.svg', format = 'svg', dpi = 1200)
-    f.savefig(plottitle+'_redo.png', format = 'png', dpi = 1200)
+    f.savefig(plottitle+'.svg', format = 'svg', dpi = 1200)
+    f.savefig(plottitle+'.png', format = 'png', dpi = 1200)
 
 
 #fxn for plotting the interseg phase diff with diff params
-def heatmap_params_intersegphis(meanphi_interseg_L,varphi_interseg_L,meanphi_interseg_R,varphi_interseg_R,intersegprops,contraprops,stype,plottitle):
+def heatmap_params_intersegphis(meanphi_interseg_L,varphi_interseg_L,meanphi_interseg_R,varphi_interseg_R,intersegprops,contraprops,stype,svector,savetitle):
     f,((ax1,ax2),(ax3,ax4)) = plt.subplots(nrows=2,ncols=2)
-    ilabels = intersegprops.copy()
-    clabels = contraprops.copy()
-    #ilabels.reverse()
-    #clabels.reverse()
+    ilabels = intersegprops
+    clabels = contraprops
     # ilabels = [str(round(i,2)) for i in intersegprops]
     # clabels = [str(round(c,2)) for c in contraprops]
     #pull out nans to make diff color
@@ -141,11 +136,11 @@ def heatmap_params_intersegphis(meanphi_interseg_L,varphi_interseg_L,meanphi_int
     ax1.set(xlabel="", title = tist + r"$<\phi>_{interseg}$")
     ax2.set(xlabel="", ylabel="",  title = r"$\sigma^2_\phi - interseg$")
     ax3.set(xlabel="Contra Eff Coupling", ylabel="Inter Eff Coupling")
-    ax4.set(xlabel="Contra Eff Coupling", ylabel="")
+    ax4.set(xlabel="Contra Eff Coupling", ylabel=str(svector))
  
     plt.show()
-    f.savefig(plottitle+'_redo.svg', format = 'svg', dpi = 1200)
-    f.savefig(plottitle+'_redo.png', format = 'png', dpi = 1200)
+    f.savefig(plottitle+'.svg', format = 'svg', dpi = 1200)
+    f.savefig(plottitle+'.png', format = 'png', dpi = 1200)
 
 
 #%% functions for setting up the model - param setting, nonlinearity (FI curve) - sigmoid, derivative of activation function
@@ -352,7 +347,7 @@ def simulate_wc_multiseg(tau_E, b_E, theta_E, tau_I, b_I, theta_I,
                     rE_init, rI_init, dt, range_t, kmax_E, kmax_I, n_segs, rest_dur, 
                     n_sides, sim_input, pulse_vals, contra_weights, EEadjtest, EIadjtest, offsetcontra, contra_dur, 
                     offsetcontra_sub, contra_dur_sub, perturb_init, 
-                    perturb_input, **otherpars):
+                    perturb_input, noisemean, noisevar, **otherpars):
     """
     Simulate the Wilson-Cowan equations
 
@@ -367,17 +362,7 @@ def simulate_wc_multiseg(tau_E, b_E, theta_E, tau_I, b_I, theta_I,
     rEms, rIms, drEms, drIms, I_ext_E, I_ext_I = np.zeros([Lt+1,n_segs,n_sides]), np.zeros([Lt+1,n_segs,n_sides]), np.zeros([Lt+1,n_segs,n_sides]), np.zeros([Lt+1,n_segs,n_sides]), np.zeros([Lt,n_segs,n_sides]), np.zeros([Lt,n_segs,n_sides])
     
     #initialize E and I activity
-    # if inhib_init[0] == 1 and inhib_init[1] == 0:
-    #     rIms[0,:,0] = inhib_init[2] #ipsi
-    # elif inhib_init[0] == 1 and inhib_init[1] == 1:
-    #     rIms[0,:,1] = inhib_init[2] #contra
-    # elif inhib_init[0] == 1 and inhib_init[1] == 2:
     rIms[0,:,:] = rI_init #both
-    # if excit_init[0] == 1 and excit_init[1] == 0:
-    #     rEms[0,:,0] = excit_init[2] #ipsi
-    # elif excit_init[0] == 1 and excit_init[1] == 1:
-    #     rEms[0,:,1] = excit_init[2] #contra 
-    # elif excit_init[0] == 1 and excit_init[1] == 2:
     rEms[0,:,:] = rE_init #both
 
     if perturb_init[0] == 1:
@@ -399,6 +384,7 @@ def simulate_wc_multiseg(tau_E, b_E, theta_E, tau_I, b_I, theta_I,
         if pulse_vals[0,2] == 0: #tonic input, single pulse
             I_ext_E[:,:,0] = np.repeat(np.reshape(np.concatenate((np.zeros(rest_dur), pulse_vals[0,0] * np.ones(int(pulse_vals[0,1])), np.zeros(Lt-int(pulse_vals[0,1])-rest_dur))),[Lt,1]),n_segs,axis=1) #ipsi
             if n_sides>1:
+                print('side2')
                 I_ext_E[:,:,1] = np.repeat(np.reshape(np.concatenate((np.zeros(rest_dur), round(pulse_vals[0,0] * offsetcontra_sub,2) * np.ones(int(pulse_vals[0,1]*contra_dur_sub)),
                                                                       round(pulse_vals[0,0] * offsetcontra,2) * np.ones(int((pulse_vals[0,1]*contra_dur))), 
                                                                       np.zeros(Lt-int((pulse_vals[0,1]*(contra_dur+contra_dur_sub)))-rest_dur))),[Lt,1]),n_segs,axis=1) #contra
@@ -410,7 +396,6 @@ def simulate_wc_multiseg(tau_E, b_E, theta_E, tau_I, b_I, theta_I,
                 I_ext_E[:,:,1] = np.repeat(np.reshape(np.where(sine_contra>0, sine_contra*pulse_vals[0,0], 0),[Lt,1],n_segs,axis=1))
     
     #perturb_input = [1, sign, 0, sloop, inputl, rest_dur+1, pulse-rest_dur] #yesno, I E or both, ipsi contra or both, seg, mag, time of onset, duration of input
-    
     if perturb_input[0] == 1:
         start = int(perturb_input[5])
         end = start + int(perturb_input[6])
@@ -433,11 +418,6 @@ def simulate_wc_multiseg(tau_E, b_E, theta_E, tau_I, b_I, theta_I,
     #pull out the individual contra weights
     wEEcontra, wEIcontra, wIEcontra, wIIcontra = contra_weights
     
-    print('EEadj = '+str(EEadjtest))
-    print('EIadj = '+str(EIadjtest))
-    print('EEcontra = '+str(wEEcontra))
-    print('EIcontra = '+str(wEIcontra))
-    
     # Simulate the Wilson-Cowan equations
     for k in np.arange(Lt):
         for s in np.arange(n_sides):
@@ -448,27 +428,31 @@ def simulate_wc_multiseg(tau_E, b_E, theta_E, tau_I, b_I, theta_I,
             else:
                 cs = 0
             for seg in np.arange(n_segs):
+                noise_s = np.random.normal(noisemean,noisevar)
                 # Calculate the derivative of the I population - same update for all seg
                 drIms[k,seg,s] = dt / tau_I * (-rIms[k,seg,s] + (kmax_I - rIms[k,seg,s]) 
                                                * G((wIIself * rIms[k,seg,s] + wIEself * rEms[k,seg,s]
-                                                   + wIEcontra * rEms[k,seg,cs] + wIIcontra * rIms[k,seg,cs] + I_ext_I[k,seg,s]), b_I, theta_I))
+                                                   + wIEcontra * rEms[k,seg,cs] + wIIcontra * rIms[k,seg,cs] + I_ext_I[k,seg,s]), b_I, theta_I)) + noise_s
                 if seg == n_segs-1:
+                    noise_s = np.random.normal(noisemean,noisevar)
                     #eq without +1 terms
                     # Calculate the derivative of the E population
                     drEms[k,seg,s] = dt / tau_E * (-rEms[k,seg,s] + (kmax_E - rEms[k,seg,s]) * G(((EEadjtest*2 * rEms[k,seg-1,s]) + (wEEself * rEms[k,seg,s]) 
                                                                    + (EIadjtest*2 * rIms[k,seg-1,s]) + (wEIself * rIms[k,seg,s])
-                                                                   + (wEEcontra * rEms[k,seg,cs]) + (wEIcontra * rIms[k,seg,cs]) + I_ext_E[k,seg,s]), b_E, theta_E))
+                                                                   + (wEEcontra * rEms[k,seg,cs]) + (wEIcontra * rIms[k,seg,cs]) + I_ext_E[k,seg,s]), b_E, theta_E)) + noise_s
                 elif seg == 0:
+                    noise_s = np.random.normal(noisemean,noisevar)
                     #eq without the i-1 terms
                     # Calculate the derivative of the E population
                     drEms[k,seg,s] = dt / tau_E * (-rEms[k,seg,s] + (kmax_E - rEms[k,seg,s]) * G(((wEEself * rEms[k,seg,s]) + (EEadjtest*2 * rEms[k,seg+1,s]) 
                                                                        + (wEIself * rIms[k,seg,s]) + (EIadjtest*2 * rIms[k,seg+1,s]) 
-                                                                       + (wEEcontra * rEms[k,seg,cs]) + (wEIcontra * rIms[k,seg,cs]) + I_ext_E[k,seg,s]), b_E, theta_E))
+                                                                       + (wEEcontra * rEms[k,seg,cs]) + (wEIcontra * rIms[k,seg,cs]) + I_ext_E[k,seg,s]), b_E, theta_E)) + noise_s
                 else: #seg a2-7
+                    noise_s = np.random.normal(noisemean,noisevar)
                     #the eq's for all mid segs
                     drEms[k,seg,s] = dt / tau_E * (-rEms[k,seg,s] + (kmax_E - rEms[k,seg,s]) * G(((EEadjtest * rEms[k,seg-1,s]) + (wEEself * rEms[k,seg,s]) + (EEadjtest * rEms[k,seg+1,s]) 
                                                                    + (EIadjtest * rIms[k,seg-1,s]) + (wEIself * rIms[k,seg,s]) + (EIadjtest * rIms[k,seg+1,s]) 
-                                                                   + (wEEcontra * rEms[k,seg,cs]) + (wEIcontra * rIms[k,seg,cs]) + I_ext_E[k,seg,s]), b_E, theta_E))
+                                                                   + (wEEcontra * rEms[k,seg,cs]) + (wEIcontra * rIms[k,seg,cs]) + I_ext_E[k,seg,s]), b_E, theta_E)) + noise_s
                 # Update using Euler's method
                 if rEms[k+1,seg,s] == 0:
                     rEms[k+1,seg,s] = float(rEms[k,seg,s] + drEms[k,seg,s])
@@ -482,8 +466,7 @@ def simulate_wc_multiseg(tau_E, b_E, theta_E, tau_I, b_I, theta_I,
     return rEms, rIms, I_ext_E, I_ext_I
 
 
-
-#%% run simulations - iterate over the parameter space - proportion EI adj weights; proportion EI contra weights 
+#%% run simulations - just single value variables
 # n_t = np.arange(0,200)
 # simname = ['crawl', 'roll']
 # pars = default_pars()
@@ -492,6 +475,70 @@ def simulate_wc_multiseg(tau_E, b_E, theta_E, tau_I, b_I, theta_I,
 # alt = 0 #1 = alternating goro inputs in sine wave pattern
 # pulse_vals = np.array([[pars['I_ext_E'], pulse, alt]])
 # c_thresh = 0.3
+# noisemean = 0
+# noisevar = 0.01*pars['I_ext_E']
+# contra_weights = [0,0,0,0]
+
+# #setup sim type
+# sim = 1
+# sim_input = sim
+# if sim == 0: #crawl input
+#     offsetcontra = 1.1
+#     offsetcontra_sub = 0
+#     contra_dur_sub = 0
+#     contra_dur = 1
+# else: #roll input - commented out Goro tests
+#     offsetcontra = 1.1#0.5
+#     offsetcontra_sub = 0.05#0
+#     contra_dur_sub = 0.01#0
+#     contra_dur = 1-contra_dur_sub#0
+
+# #temp for roll/crawl plots
+# wEEadjtest = 20
+# wEIadjtest = [-20]
+
+# contraEE = 5
+# #contraEE = 0
+# #contraEI = -5
+# contraEI = 0
+# #contraIE = 5
+# contraIE = 0
+# #contraII = -5
+# contraII = 0
+
+# contra_weights = [contraEE,contraEI,contraIE,contraII]
+
+# #no perturbations       
+# perturb_init = [0]
+# perturb_input = [0]
+
+# #run that sim
+# rEms,rIms,I_ext_E,I_ext_I = simulate_wc_multiseg(**default_pars(n_sides=n_sides, sim_input=sim_input,
+#                                                     pulse_vals=pulse_vals, EEadjtest=wEEadjtest, EIadjtest=wEI, contra_weights=contra_weights, 
+#                                                     offsetcontra = offsetcontra, contra_dur = contra_dur,
+#                                                     offsetcontra_sub = offsetcontra_sub, contra_dur_sub = contra_dur_sub,
+#                                                     perturb_init = perturb_init, perturb_input = perturb_input, noisemean = noisemean, noisevar = noisevar))
+
+# #plot the activity heatmap
+# plotbothsidesheatmap(n_t,rEms,pulse_vals,contra_weights,offsetcontra,contra_dur,perturb_input,-i,plotti = simname[sim],ti = simname[sim] + '_EE=5_wnoise_0m0.01*Iv_')
+
+
+ # I_ext_E[:,:,1] = np.repeat(np.reshape(np.concatenate((np.zeros(rest_dur), round(pulse_vals[0,0] * offsetcontra_sub,2) * np.ones(int(pulse_vals[0,1]*contra_dur_sub)),
+ #                                                       round(pulse_vals[0,0] * offsetcontra,2) * np.ones(int((pulse_vals[0,1]*contra_dur))), 
+ #                                                       np.zeros(Lt-int((pulse_vals[0,1]*(contra_dur+contra_dur_sub)))-rest_dur))),[Lt,1]),n_segs,axis=1) #contra
+
+#%% run simulations - iterate over the parameter space like above, both inter and contra, 
+#but instead of proportions, do simple subtractions over iterated param space
+# n_t = np.arange(0,200)
+# simname = ['crawl', 'roll']
+# pars = default_pars()
+# n_sides = 2
+# pulse = 900 #this is for your regular input pulse NOT FOR YOUR PERTURBATIONs
+# alt = 0 #1 = alternating goro inputs in sine wave pattern
+# pulse_vals = np.array([[pars['I_ext_E'], pulse, alt]])
+# c_thresh = 0.3
+# noisemean = 0
+# noisevar = 0.01*[pars['I_ext_E']
 
 # #setup sim type
 # sim = 1
@@ -507,33 +554,58 @@ def simulate_wc_multiseg(tau_E, b_E, theta_E, tau_I, b_I, theta_I,
 #     offsetcontra = 1.1
 #     contra_dur = 1-contra_dur_sub
 
-# #setup interseg weights to test
-# intersegwprop = np.arange(0,2.75,0.25)
+# #setup interseg & contra weights to test based on previous model values for EE (interseg = 20, contra = 5)
 # wEEadjtest = 20 # keep interseg E the same, but vary I according to proportions
-# #setup contra weights to test
-# #contrawprop = np.arange(0.25,5.25,0.25) #iterate over diff ranges for contra weights
-# contraEEfix = 20 #starting out trying this as same mag of the interseg EE, but could also try this at lower mags since in main model tests before, contras were~5mag (so 0.25 of interseg mag)
+# wEIadjtest = np.arange(-40,2,2)
 
-# #calculate the proportion of E/I for contra weight type to use as x,y axes heatmap
-# intersegxvals_prop = [str(i) for i in intersegwprop]
-# contrayvals_prop = [str(i) for i in intersegwprop]
+# # # #fix EI version, vary EE
+# # contraEIfix = -5 
+# # contraEEtest = np.arange(1,11,1)
+
+# # #fix EE version, vary EI
+# # contraEEfix = 0.5
+# # contraEItest = -np.arange(1,11,1)
+
+# # #fix EE version, vary IE
+# # contraEEfix = 5
+# # contraIEtest = np.arange(1,11,1)
+
+# # #fix IE version, vary EE
+# contraIEfix = 5
+# contraEEtest = np.arange(1,11,1)
+
+# #temp for roll antiphase plots
+# # wEEadjtest = 20
+# # wEIadjtest = [-20]
+# # contraEEfix = 0
+# # contraIEtest = [5]
+
+# # #calculate the proportion of E/I for contra weight type to use as x,y axes heatmap -- with EI as variable or fixed
+# # intersegyvals_sub = [str(wEEadjtest + i) for i in wEIadjtest]
+# # contraxvals_sub = [str(contraEEfix + j) for j in contraIEtest]
+
+# #calculate the proportion of E/I for contra weight type to use as x,y axes heatmap -- with IE as variable or fixed
+# intersegyvals_sub = [str(wEEadjtest + i) for i in wEIadjtest]
+# contraxvals_sub = [str(-contraIEfix + j) for j in contraEEtest]
+
     
 # #preset heatmap mats for storing the various interseg and contra phi values - for proportions plots - EE contra and EE interseg both fixed; vary EI vals and calculate proportion
-# phi_propL = -np.ones([len(intersegwprop), len(intersegwprop)])
-# phi_propR =  -np.ones([len(intersegwprop), len(intersegwprop)])
-# phi_propcontra =  -np.ones([len(intersegwprop), len(intersegwprop)])
-# varphi_propL = -np.ones([len(intersegwprop), len(intersegwprop)])
-# varphi_propR =  -np.ones([len(intersegwprop), len(intersegwprop)])
-# varphi_propcontra =  -np.ones([len(intersegwprop), len(intersegwprop)])
+# phi_propL = -np.ones([len(wEIadjtest), len(contraEEtest)])
+# phi_propR =  -np.ones([len(wEIadjtest), len(contraEEtest)])
+# phi_propcontra =  -np.ones([len(wEIadjtest), len(contraEEtest)])
+# varphi_propL = -np.ones([len(wEIadjtest), len(contraEEtest)])
+# varphi_propR =  -np.ones([len(wEIadjtest), len(contraEEtest)])
+# varphi_propcontra =  -np.ones([len(wEIadjtest), len(contraEEtest)])
 
 # #iterate over different interseg and contralateral weights
-# for indi,i in enumerate(intersegwprop):
-#     wEIadjtest = -i * wEEadjtest
-#     for indj,j in enumerate(intersegwprop):
-#         EI = -j * contraEEfix
+# for indi,i in enumerate(wEIadjtest):
+#     wEI = i
+#     for indj,j in enumerate(contraEEtest):
+#         contraEE = j
 #         print(wEEadjtest)
-#         print(wEIadjtest)
-#         contra_weights = [contraEEfix,EI,0,0]
+#         print(wEI)
+#         contra_weights = [contraEE,0,contraIEfix,0]
+#         print(contra_weights)
         
 #         #no perturbations       
 #         perturb_init = [0]
@@ -541,13 +613,13 @@ def simulate_wc_multiseg(tau_E, b_E, theta_E, tau_I, b_I, theta_I,
         
 #         #run that sim
 #         rEms,rIms,I_ext_E,I_ext_I = simulate_wc_multiseg(**default_pars(n_sides=n_sides, sim_input=sim_input,
-#                                                             pulse_vals=pulse_vals, EEadjtest=wEEadjtest, EIadjtest=wEIadjtest, contra_weights=contra_weights, 
+#                                                             pulse_vals=pulse_vals, EEadjtest=wEEadjtest, EIadjtest=wEI, contra_weights=contra_weights, 
 #                                                             offsetcontra = offsetcontra, contra_dur = contra_dur,
 #                                                             offsetcontra_sub = offsetcontra_sub, contra_dur_sub = contra_dur_sub,
-#                                                             perturb_init = perturb_init, perturb_input = perturb_input))
+#                                                             perturb_init = perturb_init, perturb_input = perturb_input, noisemean = noisemean, noisevar = noisevar))
         
 #         #plot the activity heatmap
-#         #plotbothsidesheatmap(n_t,rEms,pulse_vals,contra_weights,offsetcontra,contra_dur,perturb_input,-i,plotti = simname[sim],ti = simname[sim] + '_Ipropinter=' + str(-i) + '_Ipropcontra=' + str(-j))
+#         #plotbothsidesheatmap(n_t,rEms,pulse_vals,contra_weights,offsetcontra,contra_dur,perturb_input,-i,plotti = simname[sim],ti = simname[sim] + '_TRUETEST_IE=5_Ipropinter=' + str(-i) + '_Ipropcontra=' + str(-j))
         
 #         #calc + store the phi's - interseg + LR
 #         cstart, cend, totalwaves, mean_phasediff_LR, phasediff_LR, mean_phasediff_interseg, phasediff_interseg = motor_output_check(n_t, rEms, pulse_vals, c_thresh, titype = simname[sim] + '_')
@@ -561,13 +633,12 @@ def simulate_wc_multiseg(tau_E, b_E, theta_E, tau_I, b_I, theta_I,
 #         phi_propR[indi,indj] = np.nanmean(mean_phasediff_interseg)
 #         varphi_propR[indi,indj] = np.nanvar(mean_phasediff_interseg)
         
-# #plot the phi's over the whole param space
-# heatmap_params_LRphis(phi_propcontra,varphi_propcontra,intersegxvals_prop,contrayvals_prop,sim,simname[sim] + '_ei_props_intersegvcontra')
-# heatmap_params_intersegphis(phi_propL,varphi_propL,phi_propR,varphi_propR,intersegxvals_prop,contrayvals_prop,sim,simname[sim] + '_ei_props_eachside')
+# # #plot the phi's over the whole param space
+# heatmap_params_LRphis(phi_propcontra,varphi_propcontra,intersegyvals_sub,contraxvals_sub,sim, simname[sim] + '_TRUETEST_IEfix=5_varEE_LR')
+# heatmap_params_intersegphis(phi_propL,varphi_propL,phi_propR,varphi_propR,intersegyvals_sub,contraxvals_sub,sim, simname[sim] + '_TRUETEST_IEfix=5_varEE_AP')
 
 
-#%% run simulations - iterate over the parameter space like above, both inter and contra, 
-#but instead of proportions, do simple subtractions over iterated param space
+#%% run over parameter space with noise many times - iterating different combos of interseg and contra weights
 n_t = np.arange(0,200)
 simname = ['crawl', 'roll']
 pars = default_pars()
@@ -577,190 +648,114 @@ alt = 0 #1 = alternating goro inputs in sine wave pattern
 pulse_vals = np.array([[pars['I_ext_E'], pulse, alt]])
 c_thresh = 0.3
 
-#setup sim type
-sim = 0
-sim_input = sim
-if sim == 0: #crawl input
-    offsetcontra = 1.1
-    contra_dur = 1
-    contra_dur_sub = 0
-    offsetcontra_sub = 0
-else: #roll input
-    offsetcontra_sub = 0.05
-    contra_dur_sub = 0.01
-    offsetcontra = 1.1
-    contra_dur = 1-contra_dur_sub
+#set the noise params = mean, var for Gauss draw to test (white noise, nm=0,nv=0.1, made 0.1 b/c 1 = too high -- dominates frequencies - this is congruent with random draw init)
+noisemean = 0
+noisevar = 0.0025
 
-#setup interseg & contra weights to test based on previous model values for EE (interseg = 20, contra = 5)
-# wEEadjtest = 20 # keep interseg E the same, but vary I according to proportions
-# wEIadjtest = np.arange(-40,2,2)
+#setup many runs and ranges
+it_range = np.arange(0,2)
+varyinter = np.arange(0,40,2)
+varycontra = np.arange(0,20,1)
+testlen = np.arange(len(varyinter))
+yvals = -np.ones(len(testlen))
+xvals = -np.ones(len(testlen))
 
-# # #fix EI version
-# contraEIfix = -5 
-# contraEEtest = np.arange(0,10,1)
+#vectors for sweeps == fixed interseg, vary 2 contras - [0,1,1,0,0],[0,1,0,1,0],[0,0,1,1,0],[0,0,0,1,1],
+#paramtestsweep - vectors for choosing which weights to fix vs. which to vary - each row is sweep type; each col is variable of interest
+sweep = np.array([[0,1,1,0,0],[0,1,0,1,0],[0,0,1,1,0],[0,0,0,1,1],[1,5,0,1,0],[1,1,0,5,0],[1,5,1,0,0],[1,0,1,0,-5]])
 
-# #fix EE version
-# contraEEfix = 5
-# contraEItest = -np.arange(1,11,1)
-
-#temp for crawl inphase plots
-# wEEadjtest = 20
-# wEIadjtest = [-20]
-# contraEEfix = 5
-# contraEItest = [0]
-
-# #temp for roll antiphase plots
-wEEadjtest = 20
-wEIadjtest = [-20]
-contraEEfix = 0
-contraEItest = [-5]
-
-#calculate the proportion of E/I for contra weight type to use as x,y axes heatmap
-intersegxvals_sub = [str(wEEadjtest + i) for i in wEIadjtest]
-contrayvals_sub = [str(contraEEfix + j) for j in contraEItest]
+#setup sim and go loop
+simtype = [0,1]
+for sim in simtype:
+    sim_input = sim
+    if sim == 0: #crawl input
+        offsetcontra_sub = 0
+        contra_dur_sub = 0
+        offsetcontra = 1.1
+        contra_dur = 1
+    else: #roll input
+        offsetcontra_sub = 0.05
+        contra_dur_sub = 0.01
+        offsetcontra = 1.1
+        contra_dur = 1-contra_dur_sub
+        
+    wEEadj = pars['wEEadj']
     
-#preset heatmap mats for storing the various interseg and contra phi values - for proportions plots - EE contra and EE interseg both fixed; vary EI vals and calculate proportion
-phi_propL = -np.ones([len(wEIadjtest), len(contraEItest)])
-phi_propR =  -np.ones([len(wEIadjtest), len(contraEItest)])
-phi_propcontra =  -np.ones([len(wEIadjtest), len(contraEItest)])
-varphi_propL = -np.ones([len(wEIadjtest), len(contraEItest)])
-varphi_propR =  -np.ones([len(wEIadjtest), len(contraEItest)])
-varphi_propcontra =  -np.ones([len(wEIadjtest), len(contraEItest)])
-
-#choose to plot a few behav examples
-# plotcEI = [0]#, -1, -3, -5, -7, -9]
-# plotwEI = [-20]#-40, -30, -20, -10, -5, 0]
-
-#iterate over different interseg and contralateral weights
-for indi,i in enumerate(wEIadjtest):
-    wEI = i
-    for indj,j in enumerate(contraEItest):
-        contraEI = j
-        print(wEEadjtest)
-        print(wEI)
-        contra_weights = [contraEEfix,contraEI,0,0]
-        #contra_weights = [j,contraEIfix,0,0]
-        print(contra_weights)
-        
-        #no perturbations       
-        perturb_init = [0]
-        perturb_input = [0]
-        
-        #run that sim
-        rEms,rIms,I_ext_E,I_ext_I = simulate_wc_multiseg(**default_pars(n_sides=n_sides, sim_input=sim_input,
-                                                            pulse_vals=pulse_vals, EEadjtest=wEEadjtest, EIadjtest=wEI, contra_weights=contra_weights, 
-                                                            offsetcontra = offsetcontra, contra_dur = contra_dur,
-                                                            offsetcontra_sub = offsetcontra_sub, contra_dur_sub = contra_dur_sub,
-                                                            perturb_init = perturb_init, perturb_input = perturb_input))
-        
-        #plot the activity heatmap
-        #if contraEI in plotcEI and wEI in plotwEI:
-        plotbothsidesheatmap(n_t,rEms,pulse_vals,contra_weights,offsetcontra,contra_dur,perturb_input,i,plotti = simname[sim],ti = simname[sim] + '_Ipropinter=' + str(-i) + '_Ipropcontra=' + str(-j))
-        
-        #calc + store the phi's - interseg + LR
-        cstart, cend, totalwaves, mean_phasediff_LR, phasediff_LR, mean_phasediff_interseg, phasediff_interseg = motor_output_check(n_t, rEms, pulse_vals, c_thresh, titype = simname[sim] + '_')
-        
-        #take mean of the interseg and LR phase diffs across all "waves"
-        phi_propcontra[indi,indj] = np.nanmean(mean_phasediff_LR)
-        varphi_propcontra[indi,indj] = np.nanvar(mean_phasediff_LR)
-        
-        phi_propL[indi,indj] = np.nanmean(mean_phasediff_interseg)
-        varphi_propL[indi,indj] = np.nanvar(mean_phasediff_interseg)
-        phi_propR[indi,indj] = np.nanmean(mean_phasediff_interseg)
-        varphi_propR[indi,indj] = np.nanvar(mean_phasediff_interseg)
-        
-# #plot the phi's over the whole param space
-#heatmap_params_LRphis(phi_propcontra,varphi_propcontra,intersegxvals_sub,contrayvals_sub,sim,simname[sim] + '_eevar_subtractfixedEI-5_intersegvcontra')
-#heatmap_params_intersegphis(phi_propL,varphi_propL,phi_propR,varphi_propR,intersegxvals_sub,contrayvals_sub,sim,simname[sim] + '_eevar_subtractfixedEI-5_eachside')
-
-
-#%% run simulations - iterate over the parameter space - contra magnitudes, fixed interseg weights
-# n_t = np.arange(0,200)
-# simname = ['crawl', 'roll']
-# pars = default_pars()
-# n_sides = 2
-# pulse = 900 #this is for your regular input pulse NOT FOR YOUR PERTURBATIONs
-# alt = 0 #1 = alternating goro inputs in sine wave pattern
-# pulse_vals = np.array([[pars['I_ext_E'], pulse, alt]])
-# c_thresh = 0.3
-
-# #setup sim type
-# sim = 1
-# sim_input = sim
-# if sim == 0: #crawl input
-#     offsetcontra = 1.1
-#     contra_dur = 1
-#     contra_dur_sub = 0
-#     offsetcontra_sub = 0
-# else: #roll input
-#     offsetcontra_sub = 0.05
-#     contra_dur_sub = 0.01
-#     offsetcontra = 1.1
-#     contra_dur = 1-contra_dur_sub
+    #preset heatmap mats for storing the various interseg and contra phi values - for proportions plots - EE contra and EE interseg both fixed; vary EI vals and calculate proportion
+    phi_propL = -np.ones([len(testlen), len(testlen)])
+    phi_propR =  -np.ones([len(testlen), len(testlen)])
+    phi_propcontra =  -np.ones([len(testlen), len(testlen)])
+    varphi_propL = -np.ones([len(testlen), len(testlen)])
+    varphi_propR =  -np.ones([len(testlen), len(testlen)])
+    varphi_propcontra =  -np.ones([len(testlen), len(testlen)])
     
-# #interseg params (fixed to orig Gjorgjieva interseg weights) via default_pars()
-
-# #contra params
-# contraEErange = np.arange(0,22,2)
-# contraEIrange = -np.arange(0,22,2)
-
-# #preset heatmap mats for storing the various interseg and contra phi values - for proportions plots - EE contra and EE interseg both fixed; vary EI vals and calculate proportion
-# phi_magL = -np.ones([len(contraEErange),len(contraEIrange)])
-# phi_magR =  -np.ones([len(contraEErange),len(contraEIrange)])
-# phi_magcontra =  -np.ones([len(contraEErange),len(contraEIrange)])
-# varphi_magL = -np.ones([len(contraEErange),len(contraEIrange)])
-# varphi_magR =  -np.ones([len(contraEErange),len(contraEIrange)])
-# varphi_magcontra =  -np.ones([len(contraEErange),len(contraEIrange)])
-
-# for ce,EE in enumerate(contraEErange):
-#     for ci,EI in enumerate(contraEIrange): 
-#         contra_weights = [EE,EI,0,0]
-#         #wEEcontra, wEIcontra, wIEcontra, wIIcontra = contra_weights
-        
-#         #no perturbations       
-#         perturb_init = [0]
-#         perturb_input = [0]
-        
-#         #run that sim
-#         rEms,rIms,I_ext_E,I_ext_I = simulate_wc_multiseg(**default_pars(n_sides=n_sides, sim_input=sim_input,
-#                                                             pulse_vals=pulse_vals, EEadjtest=pars['wEEadj'], EIadjtest=pars['wEIadj'], contra_weights=contra_weights, 
-#                                                             offsetcontra = offsetcontra, contra_dur = contra_dur,
-#                                                             offsetcontra_sub = offsetcontra_sub, contra_dur_sub = contra_dur_sub,
-#                                                             perturb_init = perturb_init, perturb_input = perturb_input))
-        
-#         #plot the activity heatmap      
-#         # if ci%4 == 0: #plot just a subset of the activity graphs to check that simulations matchup w/ phase diagram plots
-#         #     plotbothsidesheatmap(n_t,rEms,pulse_vals,contra_weights,offsetcontra,contra_dur,perturb_input,1,plotti = simname[sim],ti = simname[sim] + '_' + 'EE_'+str(ce) + 'EI_'+str(ci))
-        
-#         #take mean of the interseg and LR phase diffs across all "waves"
-#         phi_magcontra[ce,ci] = np.nanmean(mean_phasediff_LR)
-#         varphi_magcontra[ce,ci] = np.nanvar(mean_phasediff_LR)
-        
-#         phi_magL[ce,ci] = np.nanmean(mean_phasediff_interseg)
-#         varphi_magL[ce,ci] = np.nanvar(mean_phasediff_interseg)
-#         phi_magR[ce,ci] = np.nanmean(mean_phasediff_interseg)
-#         varphi_magR[ce,ci] = np.nanvar(mean_phasediff_interseg)
-        
-        
-# #plot the phi's over the whole param space
-# heatmap_params_LRphis(phi_propcontra,varphi_propcontra,contraEErange,contraEIrange,sim,simname[sim] + '_ei_mags_contracomp')
-# heatmap_params_intersegphis(phi_propL,varphi_propL,phi_propR,varphi_propR,contraEErange,contraEIrange,sim,simname[sim] + '_ei_mags_eachside')
+    #pick params
+    for s in sweep:
+        print(s)
+        varyiind = np.where(s==1)[0][0]
+        varyjind = np.where(s==1)[0][1]
+        for i in testlen:
+            for j in testlen:
+                contra_weights = s[1:]
+                if varyiind == 0: #vary interseg weight
+                    wEIadj = -varyinter[i]
+                    if varyjind == 2 or varyjind == 4:
+                        contra_weights[varyjind] = -varycontra[j]
+                    else:
+                        contra_weights[varyjind] = varycontra[j]
+                    yvals[i] = wEEadj + wEIadj
+                    xvals[j] = np.sum(np.where(s[1:])!=1) + j
+                else:
+                    wEIadj = -20 #fixed interseg weight
+                    #do the effective couple calc before reassigning weights to the variable values so that sum is correct since 2 variables in contra
+                    if any(contra_weights) > 1:
+                        yvals[i] = np.sum(np.where(contra_weights)!=1) + varycontra[i]
+                        xvals[j] = np.sum(np.where(contra_weights)!=1) + varycontra[j]
+                    else:
+                        yvals[i] = i
+                        xvals[j] = j
+                    if varyiind == 2: #2nd entry of contravals - wEI
+                        contra_weights[varyiind] = -varycontra[i]
+                    else:
+                        contra_weights[varyiind] = varycontra[i]
+                    if varyjind == 2 or varyjind == 4: #2nd and 4th - wEI, wII
+                        contra_weights[varyjind] = -varycontra[j]
+                    else:
+                        contra_weights[varyjind] = varycontra[j] 
 
 
-#%%
-#then check weights compared to ring
+                print(wEEadj)
+                print(wEIadj)
+                print(contra_weights)
+                
+                #no perturbations       
+                perturb_init = [0]
+                perturb_input = [0]
+                
+                #run that sim
+                rEms,rIms,I_ext_E,I_ext_I = simulate_wc_multiseg(**default_pars(n_sides=n_sides, sim_input=sim_input,
+                                                                    pulse_vals=pulse_vals, EEadjtest=wEEadj, EIadjtest=wEIadj, contra_weights=contra_weights, 
+                                                                    offsetcontra = offsetcontra, contra_dur = contra_dur,
+                                                                    offsetcontra_sub = offsetcontra_sub, contra_dur_sub = contra_dur_sub,
+                                                                    perturb_init = perturb_init, perturb_input = perturb_input, noisemean = noisemean, noisevar = noisevar))
+                
+                #plot the activity heatmap
+                #plotbothsidesheatmap(n_t,rEms,pulse_vals,contra_weights,offsetcontra,contra_dur,perturb_input,-i,plotti = simname[sim],ti = simname[sim] + '_TRUETEST_IE=5_Ipropinter=' + str(-i) + '_Ipropcontra=' + str(-j))
+                
+                #calc + store the phi's - interseg + LR
+                cstart, cend, totalwaves, mean_phasediff_LR, phasediff_LR, mean_phasediff_interseg, phasediff_interseg = motor_output_check(n_t, rEms, pulse_vals, c_thresh, titype = simname[sim] + '_')
+                
+                #take mean of the interseg and LR phase diffs across all "waves"
+                phi_propcontra[i,j] = np.nanmean(mean_phasediff_LR)
+                varphi_propcontra[i,j] = np.nanvar(mean_phasediff_LR)
+                
+                phi_propL[i,j] = np.nanmean(mean_phasediff_interseg)
+                varphi_propL[i,j] = np.nanvar(mean_phasediff_interseg)
+                phi_propR[i,j] = np.nanmean(mean_phasediff_interseg)
+                varphi_propR[i,j] = np.nanvar(mean_phasediff_interseg)
+                
+    # #plot the phi's over the whole param space
+    heatmap_params_LRphis(phi_propcontra,varphi_propcontra,intersegyvals_sub,contraxvals_sub,sim,s,simname[sim]+'_'+str(len(it_range))+'x_'+'_noise['+str(nm)+','+str(nv)+']'+'_heatmap_params_LRphis')
+    heatmap_params_intersegphis(phi_propL,varphi_propL,phi_propR,varphi_propR,intersegyvals_sub,contraxvals_sub,sim,s,simname[sim]+'_'+str(len(it_range))+'x_'+'_noise['+str(nm)+','+str(nv)+']'+'_heatmap_params_intersegphis')
 
-#then do midseg test
 
-#fin by Mon; move onto EM
-
-#Tues - keep going EM, be prepping Allen
-#if time, set up stability sims too and run overnight some time
-
-#when Ashok back, update on model and EM
-
-
-##problem to think about - though the itnerseg wegiths are equal, 
-#the I pop threshold is lower and gain is higher... so faster inhibition probably part of the key togettign wave? need to think more about consolidating w/ Harris too
-
-#then try roll input to iterate over number of midsegs -- how many necessary to generate the rolling?

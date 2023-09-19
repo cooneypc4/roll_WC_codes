@@ -661,7 +661,7 @@ def default_pars(**kwargs):
   # simulation parameters
   pars['T'] = 100.        # Total duration of simulation [ms]
   pars['dt'] = .1        # Simulation time step [ms]
-  pars['rE_init'] = 0.017  # Initial value of E - unclear if should keep this - tutorial used 0.2 for E and I; paper does not mention initialization
+  pars['rE_init'] = 0.017  # Initial value of E
   pars['rI_init'] = 0.011 # Initial value of I
   pars['n_segs'] = 8
   pars['rest_dur'] = 1
